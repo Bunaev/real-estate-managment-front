@@ -43,6 +43,7 @@
     <!-- ================= FILTERS + CATALOG ================= -->
     <section id="catalog" class="scroll-mt-24 space-y-6">
       <FilterPanel
+        v-if="viewMode !== 'map'"
         :filters="filters"
         :loading-references="loadingReferences"
         :locations="locations"
@@ -67,7 +68,7 @@
 
         <div class="flex flex-wrap items-center gap-3">
           <!-- Количество ЖК на странице -->
-          <label class="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/80 py-1 pl-3 pr-1 text-xs font-semibold text-slate-500 shadow-sm backdrop-blur">
+          <label v-if="viewMode !== 'map'" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white/80 py-1 pl-3 pr-1 text-xs font-semibold text-slate-500 shadow-sm backdrop-blur">
             Показывать по
             <select v-model.number="pageSize" class="cursor-pointer appearance-none rounded-xl bg-slate-50 px-2.5 py-1.5 pr-6 text-xs font-bold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100" :aria-label="'Сколько ЖК на странице'">
               <option v-for="s in [6, 9, 12, 24]" :key="s" :value="s">{{ s }}</option>
@@ -94,10 +95,39 @@
               <AppIcon name="rows" :size="16" :stroke="viewMode === 'list' ? '#fff' : '#64748b'" />
               <span class="hidden sm:inline">Список</span>
             </button>
+            <button
+              class="flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all duration-200"
+              :class="viewMode === 'map' ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25' : 'text-slate-500 hover:text-slate-800'"
+              :aria-pressed="viewMode === 'map'"
+              @click="viewMode = 'map'"
+            >
+              <AppIcon name="map" :size="16" :stroke="viewMode === 'map' ? '#fff' : '#64748b'" />
+              <span class="hidden sm:inline">Карта</span>
+            </button>
           </div>
         </div>
       </div>
 
+      <!-- Карта (фильтры — те же, панель прямо над картой) -->
+      <template v-if="viewMode === 'map'">
+        <FilterPanel
+          :filters="filters"
+          :loading-references="loadingReferences"
+          :locations="locations"
+          :districts="districts"
+          :developers="developers"
+          :metro-stations="metroStations"
+          @apply="onFilterApply"
+          @reset="onFilterReset"
+        />
+        <CatalogMap
+          :filters="filters"
+          :references="{ locations, districts, developers, metroStations }"
+          @apply="onFilterApply"
+        />
+      </template>
+
+      <template v-else>
       <!-- Loading (initial) -->
       <div v-if="store.loading && !store.complexes.length" class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
         <SkeletonCard v-for="i in 6" :key="'sk-' + i" />
@@ -143,12 +173,13 @@
 
       <!-- Pagination -->
       <PaginationBar :current-page="store.currentPage" :total-pages="store.totalPages" @page-change="onPageChange" />
+      </template>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useComplexStore } from '@/stores/complexStore'
 import { referenceApi } from '@/api'
@@ -156,6 +187,8 @@ import SearchBar from '@/components/SearchBar.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import ComplexCard from '@/components/ComplexCard.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
+// Карта (maplibre-gl) грузится лениво — только когда пользователь открывает режим «Карта»
+const CatalogMap = defineAsyncComponent(() => import('@/components/CatalogMap.vue'))
 import PaginationBar from '@/components/PaginationBar.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import { pluralize } from '@/utils/format.js'
@@ -169,7 +202,6 @@ const pageSize = ref(9)
 const filters = ref({
   locationId: null,
   districtId: null,
-  developerId: null,
   developerIds: [],
   metroStationIds: [],
   floorFrom: null,
@@ -195,7 +227,6 @@ const filtersActive = computed(() => {
   return [
     f.locationId != null,
     f.districtId != null,
-    f.developerId != null,
     f.developerIds.length > 0,
     f.metroStationIds.length > 0,
     f.floorFrom != null,
@@ -269,7 +300,6 @@ const onFilterReset = () => {
   filters.value = {
     locationId: null,
     districtId: null,
-    developerId: null,
     developerIds: [],
     metroStationIds: [],
     floorFrom: null,
@@ -296,7 +326,7 @@ const onApplyFilter = (item) => {
   const t = item.entityType
   if (t === 'Локация') filters.value.locationId = item.entityId
   else if (t === 'Район') filters.value.districtId = item.entityId
-  else if (t === 'Застройщик') filters.value.developerId = item.entityId
+  else if (t === 'Застройщик') filters.value.developerIds = [item.entityId]
   else if (t === 'Метро') filters.value.metroStationIds = [item.entityId]
   else if (t === 'ЖК' && item.entityId) {
     router.push('/complex/' + item.entityId)

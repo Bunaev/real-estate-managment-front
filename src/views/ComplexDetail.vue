@@ -135,7 +135,7 @@
                   <div v-if="isOpen(bi)" class="border-t border-slate-200/70 px-5 py-4">
                     <div class="flex flex-wrap gap-2">
                       <span v-for="(ent, ei) in b.entrances || []" :key="ent.id" class="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-sm font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200/80">
-                        <AppIcon name="entrance" :size="15" stroke="#818cf8" />
+                        <AppIcon name="door" :size="15" stroke="#818cf8" />
                         {{ ent.name || 'Секция ' + (ei + 1) }}
                       </span>
                       <p v-if="!(b.entrances || []).length" class="text-sm text-slate-400">Секции не добавлены</p>
@@ -227,7 +227,7 @@ const addressLine = computed(() =>
 const infoRows = computed(() => [
   { key: 'dev', label: 'Застройщик', icon: 'developer', value: hero.value?.developer, bg: 'bg-indigo-50 text-indigo-600', color: '#4f46e5' },
   { key: 'loc', label: 'Локация', icon: 'location', value: hero.value?.location, bg: 'bg-sky-50 text-sky-600', color: '#0284c7' },
-  { key: 'dist', label: 'Район', icon: 'entrance', value: hero.value?.district, bg: 'bg-violet-50 text-violet-600', color: '#7c3aed' },
+  { key: 'dist', label: 'Район', icon: 'map', value: hero.value?.district, bg: 'bg-violet-50 text-violet-600', color: '#7c3aed' },
   { key: 'addr', label: 'Адрес', icon: 'apartment', value: hero.value?.address, bg: 'bg-emerald-50 text-emerald-600', color: '#059669' },
 ])
 

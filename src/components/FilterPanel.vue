@@ -66,11 +66,19 @@
             </div>
 
             <div>
-              <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400">Застройщик</label>
-              <select class="field" :value="filters.developerId ?? ''" @change="setNum('developerId', $event.target.value)">
-                <option value="">Все застройщики</option>
-                <option v-for="dev in developers" :key="dev.id" :value="dev.id">{{ dev.name }}</option>
-              </select>
+              <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">Застройщики</label>
+              <div v-if="developers.length" class="flex max-h-32 flex-wrap content-start gap-1.5 overflow-y-auto pr-1">
+                <button
+                  v-for="dev in developers"
+                  :key="dev.id"
+                  class="chip"
+                  :class="isDeveloperOn(dev.id) ? 'chip-on' : ''"
+                  @click="toggleInArray('developerIds', dev.id)"
+                >
+                  {{ dev.name }}
+                </button>
+              </div>
+              <p v-else class="text-sm text-slate-400">{{ loadingReferences ? 'Загружаем застройщиков…' : 'Список пуст' }}</p>
             </div>
 
             <!-- Ranged numeric inputs -->
@@ -189,7 +197,6 @@ const filtersActive = computed(() => {
   return [
     f.locationId != null,
     f.districtId != null,
-    f.developerId != null,
     (f.developerIds || []).length > 0,
     (f.metroStationIds || []).length > 0,
     f.floorFrom != null,
@@ -207,6 +214,7 @@ const filtersActive = computed(() => {
 
 const isMetroOn = (id) => (props.filters.metroStationIds || []).includes(id)
 const isTypeOn = (value) => (props.filters.types || []).includes(value)
+const isDeveloperOn = (id) => (props.filters.developerIds || []).includes(id)
 
 /* helpers: filters is the parent's reactive object, shared by reference */
 const set = (key, value) => {

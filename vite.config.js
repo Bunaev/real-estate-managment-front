@@ -4,6 +4,10 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig({
   plugins: [vue()],
+  build: {
+    // maplibre-gl — отдельный ленивый чанк, он заметно тяжёлый
+    chunkSizeWarningLimit: 1200,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

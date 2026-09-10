@@ -3,9 +3,9 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 25000,
-  headers: { 'Content-Type': 'application/json' },
-  // Flatten arrays into repeated query keys (Spring binds `ids=1&ids=2` to List<Integer>),
-  // and skip null/undefined/empty values.
+  // ВАЖНО: Content-Type здесь не задаём. Иначе axios превращает FormData в JSON
+  // (transformRequest конвертирует FormData при JSON-заголовке) и multipart ломается.
+  // Для обычных объектов axios сам ставит application/json, для FormData — multipart + boundary.
   paramsSerializer: {
     serialize: (params) => {
       const search = new URLSearchParams()
@@ -68,10 +68,27 @@ export function renderCoverUrl(id) {
 }
 
 /* ---------------- Управление ---------------- */
+/* DTO + картинка рендера уходят одним multipart-запросом (части `dto` и `file`):
+   бэкенд ожидает @RequestPart("dto") / @RequestPart("file"). */
+const buildComplexForm = (dto, file) => {
+  const form = new FormData()
+  form.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }))
+  if (file) form.append('file', file)
+  return form
+}
+
 export const manageApi = {
   // ЖК
-  createComplex: (data) => api.post('/complexes', data),
-  updateComplex: (id, data) => api.put('/complexes/' + id, data),
+  createComplex: (dto, file, onUploadProgress) =>
+    api.post('/complexes', buildComplexForm(dto, file), {
+      timeout: 120000,
+      onUploadProgress,
+    }),
+  updateComplex: (id, dto, file, onUploadProgress) =>
+    api.put('/complexes/' + id, buildComplexForm(dto, file), {
+      timeout: 120000,
+      onUploadProgress,
+    }),
   deleteComplex: (id) => api.delete('/complexes/' + id),
   getComplexEdit: (id) => api.get('/complexes/' + id + '/edit'),
 

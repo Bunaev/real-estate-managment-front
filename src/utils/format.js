@@ -60,6 +60,17 @@ export function formatMeters(meters) {
     return n >= 1000 ? (n / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' км' : n + ' м'
 }
 
+export function formatCoord(value, digits = 5) {
+    if (value === null || value === undefined || value === '') return '—'
+    const n = Number(value)
+    if (Number.isNaN(n)) return '—'
+    return n.toFixed(digits)
+}
+
+export function hasCoords(item) {
+    return item && typeof item.latitude === 'number' && typeof item.longitude === 'number'
+}
+
 export function complexGradient(id) {
     const h1 = ((id * 47) % 360)
     const h2 = ((id * 83 + 60) % 360)

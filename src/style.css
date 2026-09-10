@@ -1,5 +1,6 @@
 /* Tailwind CSS v4 — the whole framework is imported with one line. */
 @import "tailwindcss";
+@import 'maplibre-gl/dist/maplibre-gl.css';
 
 /* ------------------------------------------------------------------ */
 /* Base                                                                */

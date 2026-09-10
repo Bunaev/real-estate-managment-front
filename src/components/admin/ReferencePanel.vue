@@ -45,7 +45,7 @@
       <!-- Районы -->
       <div class="rounded-2xl bg-white/85 p-5 ring-1 ring-slate-200/70 backdrop-blur" :class="focusCard === 'district' ? 'ring-2 ring-indigo-300' : ''">
         <div class="flex items-center gap-3">
-          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600"><AppIcon name="entrance" :size="18" /></span>
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600"><AppIcon name="map" :size="18" /></span>
           <h4 class="flex-1 text-sm font-bold text-slate-900">Районы</h4>
         </div>
         <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">

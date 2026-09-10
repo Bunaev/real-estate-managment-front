@@ -11,7 +11,7 @@
           <AppIcon name="floor" :size="15" /> Добавить корпус
         </button>
         <button class="btn btn-primary" :disabled="!complexId || !buildings.length" @click="openEntranceModal()">
-          <AppIcon name="entrance" :size="15" /> Добавить секцию
+          <AppIcon name="door" :size="15" /> Добавить секцию
         </button>
       </div>
     </div>
@@ -71,7 +71,7 @@
             <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Секции: {{ b.entrances?.length || 0 }}</p>
             <div v-if="b.entrances?.length" class="space-y-2">
               <div v-for="e in b.entrances" :key="e.id" class="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/70 bg-slate-50/70 px-3.5 py-2.5 transition hover:border-indigo-200">
-                <AppIcon name="entrance" :size="16" stroke="#6366f1" />
+                <AppIcon name="door" :size="16" stroke="#6366f1" />
                 <span class="min-w-0 flex-1 truncate text-sm font-bold text-slate-700">{{ e.name }}</span>
                 <span class="hidden text-xs text-slate-400 sm:inline">ID {{ e.id }}</span>
                 <button class="btn-sm btn-sm-light" title="Открыть квартиры секции" @click="goFlats(b.id, e.id)">
@@ -91,7 +91,7 @@
         </div>
       </div>
 
-      <p class="text-xs text-slate-400">💡 Импорт/экспорт квартир работает по секции: файл должен соответствовать шаблону выгрузки (xlsx).</p>
+      <ImportExportHelp />
     </template>
 
     <!-- Building modal -->
@@ -150,6 +150,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import ImportExportHelp from '@/components/ImportExportHelp.vue'
 import { manageApi, complexApi } from '@/api'
 import { useUiStore } from '@/stores/uiStore'
 

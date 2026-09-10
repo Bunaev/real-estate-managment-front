@@ -47,7 +47,7 @@
         <div class="mt-4 flex items-center justify-between gap-2 border-t border-slate-100 pt-3.5">
           <div class="flex items-center gap-3 text-xs font-semibold text-slate-500">
             <span class="inline-flex items-center gap-1.5"><AppIcon name="building" :size="14" stroke="#818cf8" />{{ c.countBuildings || 0 }}</span>
-            <span class="inline-flex items-center gap-1.5"><AppIcon name="entrance" :size="14" stroke="#818cf8" />{{ c.countEntrance || 0 }}</span>
+            <span class="inline-flex items-center gap-1.5"><AppIcon name="door" :size="14" stroke="#818cf8" />{{ c.countEntrance || 0 }}</span>
           </div>
           <div class="flex items-center gap-1.5">
             <button class="btn-sm btn-sm-primary" @click="emit('openTab', 'buildings', { complexId: c.id })">
@@ -106,8 +106,67 @@
         </div>
       </div>
 
-      <!-- 2. Метро -->
-      <h4 class="section-title mt-7">2 · Станции метро и расстояние</h4>
+      <!-- 2. Рендер и точка на карте -->
+      <h4 class="section-title mt-7">2 · Рендер и точка на карте</h4>
+      <div class="mt-3 grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <!-- Изображение-рендер -->
+        <div>
+          <label class="label">Рендер ЖК {{ editingId ? '' : '*' }}</label>
+          <div
+            role="button"
+            tabindex="0"
+            class="group relative flex h-44 w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed p-2 text-center transition"
+            :class="dragOver ? 'border-indigo-400 bg-indigo-50/70' : 'border-slate-300 bg-slate-50/70 hover:border-indigo-300 hover:bg-indigo-50/40'"
+            @click="fileInput?.click()"
+            @keydown.enter.prevent="fileInput?.click()"
+            @dragover.prevent="dragOver = true"
+            @dragleave.prevent="dragOver = false"
+            @drop.prevent="onDrop"
+          >
+            <img
+              v-if="previewUrl"
+              :src="previewUrl"
+              alt="Превью рендера"
+              class="h-full w-full rounded-xl object-cover ring-1 ring-slate-900/10"
+              style="box-shadow: inset 0 1px 12px rgba(15, 23, 42, 0.18)"
+              @error="previewUrl = null"
+            />
+            <span v-else class="flex flex-col items-center gap-2 px-4">
+              <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-indigo-500 ring-1 ring-slate-200">
+                <AppIcon name="image" :size="20" />
+              </span>
+              <span class="text-xs font-bold text-slate-600">Перетащите картинку сюда или нажмите</span>
+              <span class="text-[11px] text-slate-400">JPG, PNG или WebP · до 8 МБ</span>
+            </span>
+            <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFilePicked" />
+          </div>
+          <div class="mt-2 flex items-center justify-between gap-2 text-[11px]">
+            <span class="min-w-0 truncate text-slate-400">{{ imageHint }}</span>
+            <button v-if="previewUrl && renderFile" type="button" class="shrink-0 font-bold text-rose-500 transition hover:text-rose-600" @click="clearImage">
+              Убрать файл
+            </button>
+          </div>
+        </div>
+
+        <!-- Точка на карте -->
+        <div>
+          <label class="label">Координаты ЖК {{ editingId ? '' : '*' }}</label>
+          <MapPicker :latitude="master.latitude" :longitude="master.longitude" height="11rem" @change="onPointChange" />
+          <div class="mt-3 grid grid-cols-2 gap-3">
+            <div>
+              <label class="label">Широта</label>
+              <input :value="master.latitude ?? ''" type="number" step="0.000001" class="field !py-2 !text-xs tabular-nums" placeholder="59.844421" @input="onCoordInput('latitude', $event.target.value)" />
+            </div>
+            <div>
+              <label class="label">Долгота</label>
+              <input :value="master.longitude ?? ''" type="number" step="0.000001" class="field !py-2 !text-xs tabular-nums" placeholder="30.340486" @input="onCoordInput('longitude', $event.target.value)" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Метро -->
+      <h4 class="section-title mt-7">3 · Станции метро и расстояние</h4>
       <div class="mt-3 space-y-2.5">
         <div v-for="(row, ri) in master.metro" :key="ri" class="flex flex-wrap items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-200/70">
           <select v-model="row.metroStationId" class="field flex-1 !mb-0 min-w-40" :aria-label="'Станция ' + (ri + 1)">
@@ -125,8 +184,8 @@
         </button>
       </div>
 
-      <!-- 3. Корпуса и секции -->
-      <h4 class="section-title mt-7">3 · Корпуса и секции</h4>
+      <!-- 4. Корпуса и секции -->
+      <h4 class="section-title mt-7">4 · Корпуса и секции</h4>
       <div class="mt-3 space-y-4">
         <div v-for="(b, bi) in master.buildings" :key="bi" class="rounded-2xl border border-slate-200/80 bg-white p-4">
           <div class="flex items-center justify-between gap-3">
@@ -153,7 +212,7 @@
 
           <div class="mt-4 rounded-2xl bg-slate-50 p-3">
             <p class="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-              <AppIcon name="entrance" :size="14" /> Секции (парадные)
+              <AppIcon name="door" :size="14" /> Секции (парадные)
             </p>
             <div class="space-y-2">
               <div v-for="(en, ei) in b.entrances" :key="ei" class="flex flex-wrap items-center gap-2">
@@ -181,7 +240,7 @@
         <button class="btn btn-ghost" @click="closeMaster">Отмена</button>
         <button class="btn btn-primary" :disabled="saving" @click="saveMaster">
           <span v-if="saving" class="loading-dot" />
-          {{ editingId ? 'Сохранить изменения' : 'Создать ЖК' }}
+          {{ saving ? (uploadPercent ? 'Отправка ' + uploadPercent + '%' : 'Сохраняем…') : (editingId ? 'Сохранить изменения' : 'Создать ЖК') }}
         </button>
       </template>
     </BaseModal>
@@ -198,10 +257,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import AppIcon from '@/components/AppIcon.vue'
-import { manageApi, referenceApi, complexApi } from '@/api'
+// Мини-карта выбора точки грузится лениво вместе с maplibre-gl
+const MapPicker = defineAsyncComponent(() => import('@/components/MapPicker.vue'))
+import { manageApi, referenceApi, complexApi, renderCoverUrl } from '@/api'
 import { useUiStore } from '@/stores/uiStore'
 import { complexGradient, firstLetter } from '@/utils/format.js'
 
@@ -231,6 +292,67 @@ const formError = ref('')
 const master = ref(emptyMaster())
 const deleteTarget = ref(null)
 
+/* --- рендер и карта --- */
+const IMAGE_MAX = 8 * 1024 * 1024
+const fileInput = ref(null)
+const renderFile = ref(null)
+const previewUrl = ref(null)
+const existingRenderUrl = ref(null)
+const dragOver = ref(false)
+const uploadPercent = ref(0)
+let previewObjectUrl = null
+
+const imageHint = computed(() => {
+  if (renderFile.value) return `${renderFile.value.name} · ${(renderFile.value.size / 1024 / 1024).toFixed(2)} МБ`
+  if (editingId.value && previewUrl.value) return 'Текущий рендер. Оставьте без файла, чтобы не менять'
+  return editingId.value ? 'Новый рендер не выбран' : 'Для нового ЖК рендер обязателен'
+})
+
+const releasePreview = () => {
+  if (previewObjectUrl) {
+    URL.revokeObjectURL(previewObjectUrl)
+    previewObjectUrl = null
+  }
+}
+
+const setImageFile = (file) => {
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    ui.toast('Нужен файл изображения: JPG, PNG или WebP', 'error')
+    return
+  }
+  if (file.size > IMAGE_MAX) {
+    ui.toast('Файл больше 8 МБ — выберите изображение поменьше', 'error')
+    return
+  }
+  releasePreview()
+  renderFile.value = file
+  previewObjectUrl = URL.createObjectURL(file)
+  previewUrl.value = previewObjectUrl
+}
+const onFilePicked = (e) => {
+  setImageFile(e.target.files?.[0])
+  if (fileInput.value) fileInput.value.value = ''
+}
+const onDrop = (e) => {
+  dragOver.value = false
+  setImageFile(e.dataTransfer?.files?.[0])
+}
+const clearImage = () => {
+  releasePreview()
+  renderFile.value = null
+  previewUrl.value = editingId.value ? existingRenderUrl.value : null
+}
+
+const onPointChange = ({ latitude, longitude }) => {
+  master.value.latitude = latitude
+  master.value.longitude = longitude
+}
+const onCoordInput = (key, raw) => {
+  const n = raw === '' || raw === null || raw === undefined ? null : Number(raw)
+  master.value[key] = n === null || Number.isNaN(n) ? null : n
+}
+
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (!q) return complexes.value
@@ -243,7 +365,17 @@ function emptyBuilding() {
   return { id: null, name: '', completionDate: '', keyHandoverDate: '', entrances: [] }
 }
 function emptyMaster() {
-  return { name: '', address: '', locationId: null, districtId: null, developerId: null, metro: [], buildings: [emptyBuilding()] }
+  return {
+    name: '',
+    address: '',
+    locationId: null,
+    districtId: null,
+    developerId: null,
+    latitude: null,
+    longitude: null,
+    metro: [],
+    buildings: [emptyBuilding()],
+  }
 }
 
 const loadAll = async () => {
@@ -290,21 +422,31 @@ const onLocationChange = async () => {
 }
 
 const openMaster = async (id = null) => {
+  releasePreview()
   master.value = emptyMaster()
   formError.value = ''
   editingId.value = id
+  renderFile.value = null
+  previewUrl.value = null
+  existingRenderUrl.value = null
+  dragOver.value = false
+  uploadPercent.value = 0
   if (!locations.value.length) await loadReferences()
 
   if (id) {
     try {
-      const res = await manageApi.getComplexEdit(id)
-      const d = res.data
+      // edit-DTO не содержит координат — берём их из детальной карточки
+      const [editRes, detailRes] = await Promise.all([manageApi.getComplexEdit(id), complexApi.getComplex(id)])
+      const d = editRes.data
+      const det = detailRes.data || {}
       master.value = {
         name: d.name || '',
         address: d.address || '',
         locationId: d.locationId ?? null,
         districtId: d.districtId ?? null,
         developerId: d.developerId ?? null,
+        latitude: det.latitude ?? null,
+        longitude: det.longitude ?? null,
         metro: (d.metroDistances || []).map((m) => ({ metroStationId: m.metroStationId, distance: m.distance })),
         buildings:
           d.buildings && d.buildings.length
@@ -317,6 +459,8 @@ const openMaster = async (id = null) => {
               }))
             : [emptyBuilding()],
       }
+      existingRenderUrl.value = `${renderCoverUrl(id)}?v=${Date.now()}`
+      previewUrl.value = existingRenderUrl.value
       if (d.locationId) await loadDistricts(d.locationId)
     } catch (e) {
       ui.toast('Не удалось загрузить данные ЖК: ' + e.message, 'error')
@@ -332,12 +476,29 @@ const closeMaster = () => {
   masterOpen.value = false
   editingId.value = null
   formError.value = ''
+  releasePreview()
+  renderFile.value = null
+  previewUrl.value = null
 }
+
+onBeforeUnmount(releasePreview)
 
 const buildPayload = () => {
   const m = master.value
   if (!m.name.trim() || !m.address.trim() || !m.districtId || !m.developerId) {
     formError.value = 'Заполните название, адрес, район и застройщика'
+    return null
+  }
+  if (m.latitude == null || m.longitude == null || Number.isNaN(Number(m.latitude)) || Number.isNaN(Number(m.longitude))) {
+    formError.value = 'Укажите точку ЖК на карте — иначе объект не появится на карте города'
+    return null
+  }
+  if (Number(m.latitude) < -90 || Number(m.latitude) > 90 || Number(m.longitude) < -180 || Number(m.longitude) > 180) {
+    formError.value = 'Координаты вне допустимых значений (широта ±90, долгота ±180)'
+    return null
+  }
+  if (!editingId.value && !renderFile.value) {
+    formError.value = 'Прикрепите рендер ЖК — сервер сохраняет картинку вместе с объектом'
     return null
   }
   const metroStationsOut = m.metro
@@ -378,6 +539,8 @@ const buildPayload = () => {
     address: m.address.trim(),
     districtId: Number(m.districtId),
     developerId: Number(m.developerId),
+    latitude: Number(m.latitude),
+    longitude: Number(m.longitude),
     metroStations: metroStationsOut,
     buildings,
   }
@@ -388,21 +551,29 @@ const saveMaster = async () => {
   if (!payload) return
   saving.value = true
   formError.value = ''
+  uploadPercent.value = 0
+  const onProgress = (e) => {
+    if (e?.total) uploadPercent.value = Math.round((e.loaded / e.total) * 100)
+  }
   try {
     if (editingId.value) {
-      await manageApi.updateComplex(editingId.value, payload)
+      await manageApi.updateComplex(editingId.value, payload, renderFile.value, onProgress)
       ui.toast('Жилой комплекс обновлён')
     } else {
-      await manageApi.createComplex(payload)
+      await manageApi.createComplex(payload, renderFile.value, onProgress)
       ui.toast('Жилой комплекс создан')
     }
     closeMaster()
     await loadAll()
   } catch (e) {
-    formError.value = e.message
-    ui.toast(e.message, 'error')
+    const msg = e.message || 'Не удалось сохранить'
+    formError.value = /multipart|not supported/i.test(msg)
+      ? `Сервер не принял multipart-запрос: «${msg}». Контроллеру нужны @RequestPart("dto") и @RequestPart("file") вместо @RequestBody.`
+      : msg
+    ui.toast(formError.value, 'error')
   } finally {
     saving.value = false
+    uploadPercent.value = 0
   }
 }
 

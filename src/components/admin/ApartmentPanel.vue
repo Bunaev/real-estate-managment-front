@@ -48,6 +48,9 @@
       </div>
     </div>
 
+    <!-- Справка по формату файла -->
+    <ImportExportHelp />
+
     <!-- Count / page size -->
     <div class="flex flex-wrap items-center justify-between gap-3">
       <p class="text-sm text-slate-500">Показано <b class="text-slate-800">{{ apartments.length }}</b> из <b class="tabular-nums text-slate-800">{{ total }}</b></p>
@@ -72,6 +75,7 @@
           <input ref="fileInput" type="file" accept=".xlsx,.xls" class="hidden" @change="onFilePick" />
         </label>
         <p v-if="formError" class="rounded-xl bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-600">{{ formError }}</p>
+        <ImportExportHelp />
       </div>
       <template #footer>
         <button class="btn btn-ghost" @click="importOpen = false">Отмена</button>
@@ -185,6 +189,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import ImportExportHelp from '@/components/ImportExportHelp.vue'
 import { manageApi, complexApi } from '@/api'
 import { useUiStore } from '@/stores/uiStore'
 import { APARTMENT_TYPES, STATUSES, apartmentTypeLabel, statusLabel, bathroomLabel } from '@/utils/format.js'
