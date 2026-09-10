@@ -1,0 +1,25 @@
+{
+  "name": "rem-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.41",
+    "vue-router": "^5.3.1",
+    "pinia": "^4.0.3",
+    "axios": "^1.20.0",
+    "@vueuse/core": "^14.4.0",
+    "@tanstack/vue-query": "^5.102.8",
+    "@tailwindcss/postcss": "^4.3.3",
+    "postcss": "^8.5.28"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "vite": "^8.2.2"
+  }
+}

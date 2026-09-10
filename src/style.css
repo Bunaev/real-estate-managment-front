@@ -1,0 +1,347 @@
+/* Tailwind CSS v4 — the whole framework is imported with one line. */
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #6366f1;
+  color: #fff;
+}
+
+/* Inputs manage their own focus styles — no rectangular browser/global outline
+   on rounded fields (this was the "фиолетовый прямоугольный border" around search). */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+.btn:focus-visible,
+.btn-sm:focus-visible,
+.icon-btn:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+  border: 2px solid #f1f5f9;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* hide native number spinners — cleaner ranged inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ambient animated background (blobs + mesh)                          */
+/* ------------------------------------------------------------------ */
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(60rem 40rem at 110% -10%, rgba(129, 140, 248, 0.18), transparent 60%),
+    radial-gradient(52rem 38rem at -12% 4%, rgba(125, 211, 252, 0.22), transparent 55%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 45%, #f8fafc 100%);
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.5;
+  pointer-events: none;
+  will-change: transform;
+}
+.blob-1 {
+  width: 34rem;
+  height: 34rem;
+  left: -12rem;
+  top: -10rem;
+  background: #a5b4fc;
+  animation: drift 26s ease-in-out infinite alternate;
+}
+.blob-2 {
+  width: 28rem;
+  height: 28rem;
+  right: -8rem;
+  top: 8rem;
+  background: #99f6e4;
+  opacity: 0.38;
+  animation: drift 32s ease-in-out infinite alternate-reverse;
+}
+.blob-3 {
+  width: 30rem;
+  height: 30rem;
+  left: 34%;
+  bottom: -14rem;
+  background: #fbcfe8;
+  opacity: 0.42;
+  animation: drift 38s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(3rem, -2rem) scale(1.15);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reusable helpers                                                    */
+/* ------------------------------------------------------------------ */
+.text-gradient {
+  background-image: linear-gradient(100deg, #a5b4fc 0%, #e879f9 45%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dot-grid {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.3) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.dot-grid-light {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* inputs / selects */
+.field {
+  width: 100%;
+  border-radius: 0.8rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 0.62rem 0.9rem;
+  font-size: 0.875rem;
+  color: #1e293b;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.field::placeholder {
+  color: #94a3b8;
+}
+.field:hover {
+  border-color: #cbd5e1;
+}
+.field:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+select.field {
+  cursor: pointer;
+  padding-right: 2.4rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2.4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 1.05em;
+}
+select.field option {
+  color: #1e293b;
+}
+select.field:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+.field-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.field-group > .field {
+  min-width: 0;
+}
+.field-group .dash {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  flex: none;
+}
+
+/* buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 0.9rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1;
+  padding: 0.72rem 1.15rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease,
+    color 0.25s ease, border-color 0.25s ease, filter 0.25s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn-primary {
+  color: #fff;
+  background-image: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  box-shadow: 0 10px 22px -10px rgba(79, 70, 229, 0.7);
+}
+.btn-primary:hover {
+  filter: brightness(1.07);
+  box-shadow: 0 16px 28px -12px rgba(79, 70, 229, 0.75);
+  transform: translateY(-1px);
+}
+.btn-ghost {
+  background: #fff;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+.btn-ghost:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion helpers                                                      */
+/* ------------------------------------------------------------------ */
+.fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.float-slow {
+  animation: floaty 7s ease-in-out infinite;
+}
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+/* skeleton shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+  animation: shimmer 1.8s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Route & list transitions (global on purpose)                        */
+/* ------------------------------------------------------------------ */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.grid-enter-active,
+.grid-leave-active,
+.list-enter-active,
+.list-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.grid-enter-from {
+  opacity: 0;
+  transform: scale(0.96) translateY(10px);
+}
+.grid-leave-to {
+  opacity: 0;
+  transform: scale(0.97) translateY(-6px);
+}
+.list-enter-from {
+  opacity: 0;
+  transform: translateX(-14px);
+}
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(12px);
+}
+.grid-move,
+.list-move {
+  transition: transform 0.4s ease;
+}
+
+/* ------------------------------------------------------------------ */
+/* Accessibility                                                       */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
