@@ -77,8 +77,8 @@
           class="flex items-center gap-1.5 rounded-lg bg-indigo-50/70 px-2 py-1"
           :title="m.stationName + ' — расстояние ' + formatMeters(m.distance)"
         >
-          <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-white/80 text-indigo-500 ring-1 ring-indigo-100">
-            <AppIcon name="metro" :size="10" />
+          <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-white/80 ring-1 ring-indigo-100" :title="stationLineTitle(m.stationName)">
+            <span class="h-2 w-2 rounded-full" :style="stationDotStyle(m.stationName)" />
           </span>
           <span class="min-w-0 flex-1 truncate text-[11px] font-bold text-slate-700">{{ m.stationName }}</span>
           <MetroTimes :meters="m.distance" dense />
@@ -113,6 +113,7 @@ import AppIcon from '@/components/AppIcon.vue'
 import MetroTimes from '@/components/MetroTimes.vue'
 import { renderCoverUrl } from '@/api'
 import { complexGradient, firstLetter, formatMeters } from '@/utils/format.js'
+import { stationDotStyle, stationLineTitle } from '@/utils/metroLines.js'
 
 const props = defineProps({
   complex: { type: Object, required: true },

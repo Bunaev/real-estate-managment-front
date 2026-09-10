@@ -157,7 +157,7 @@
             <ul class="mt-4 space-y-2.5">
               <li v-for="m in metroList" :key="m.stationName" class="rounded-2xl bg-slate-50 px-4 py-3">
                 <div class="flex items-center gap-3">
-                  <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ background: dotColor(m.distance) }" />
+                  <span class="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-white/60" :style="stationDotStyle(m.stationName)" :title="stationLineTitle(m.stationName)" />
                   <span class="min-w-0 flex-1">
                     <span class="block truncate text-sm font-bold text-slate-800">{{ m.stationName }}</span>
                     <span class="text-xs text-slate-400">{{ formatMeters(m.distance) }}</span>
@@ -194,6 +194,7 @@ import AppIcon from '@/components/AppIcon.vue'
 import ApartmentsExplorer from '@/components/ApartmentsExplorer.vue'
 import MetroTimes from '@/components/MetroTimes.vue'
 import { complexGradient, firstLetter, walkTimeText, formatMeters } from '@/utils/format.js'
+import { stationDotStyle, stationLineTitle } from '@/utils/metroLines.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -268,12 +269,6 @@ const toggle = (i) => {
 
 const cardGradient = (i) => complexGradient(Number(id.value) * 7 + i + 1)
 const formatNum = (n) => (n == null ? '—' : Number(n).toLocaleString('ru-RU'))
-const dotColor = (distance) => {
-  const m = Number(distance) || 0
-  if (m <= 600) return '#10b981'
-  if (m <= 1200) return '#f59e0b'
-  return '#94a3b8'
-}
 
 const load = async () => {
   loading.value = true

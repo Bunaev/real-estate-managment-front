@@ -99,9 +99,10 @@
                   :key="m.id"
                   class="chip"
                   :class="isMetroOn(m.id) ? 'chip-on' : ''"
+                  :title="m.name + ' — ' + stationLineTitle(m.name)"
                   @click="toggleInArray('metroStationIds', m.id)"
                 >
-                  <span class="chip-dot" :style="{ background: metroColor(m.id) }" />
+                  <span class="chip-dot" :style="stationDotStyle(m.name)" />
                   {{ m.name }}
                 </button>
               </div>
@@ -175,6 +176,7 @@ import { ref, computed } from 'vue'
 import AppIcon from '@/components/AppIcon.vue'
 import RangeField from './RangeField.vue'
 import { APARTMENT_TYPES, STATUSES } from '@/utils/format.js'
+import { stationDotStyle, stationLineTitle } from '@/utils/metroLines.js'
 
 const props = defineProps({
   filters: { type: Object, required: true },
@@ -236,10 +238,6 @@ const toggleInArray = (key, value) => {
 }
 const toggleScalar = (key, value) => {
   props.filters[key] = props.filters[key] === value ? null : value
-}
-const metroColor = (id) => {
-  const palette = ['#4f46e5', '#0891b2', '#db2777', '#d97706', '#16a34a', '#7c3aed', '#dc2626', '#2563eb']
-  return palette[Math.abs(Number(id)) % palette.length]
 }
 
 const apply = () => {
