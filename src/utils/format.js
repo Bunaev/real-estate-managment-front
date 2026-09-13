@@ -67,6 +67,31 @@ export function formatCoord(value, digits = 5) {
     return n.toFixed(digits)
 }
 
+export function formatDate(iso) {
+    if (!iso) return null
+    const src = String(iso).length <= 10 ? String(iso) + 'T00:00:00' : String(iso)
+    const d = new Date(src)
+    if (Number.isNaN(d.getTime())) return String(iso)
+    return d.toLocaleDateString('ru-RU')
+}
+
+/** Квартал из даты: 2027-01-01 → «1 кв. 2027». */
+export function formatQuarter(iso) {
+    if (!iso) return null
+    const src = String(iso).length <= 10 ? String(iso) + 'T00:00:00' : String(iso)
+    const d = new Date(src)
+    if (Number.isNaN(d.getTime())) return null
+    return `${Math.floor(d.getMonth() / 3) + 1} кв. ${d.getFullYear()}`
+}
+
+/* Названия связанных сущностей: в list-DTO (EditDTO) поля с суффиксом Name,
+   в detail-DTO — короткие. Помощники дают совместимость с обоими. */
+export const complexDeveloper = (c) => c?.developerName ?? c?.developer ?? ''
+export const complexLocation = (c) => c?.locationName ?? c?.location ?? ''
+export const complexDistrict = (c) => c?.districtName ?? c?.district ?? ''
+export const complexAddressLine = (c) =>
+    [complexLocation(c), complexDistrict(c), c?.address].filter(Boolean).join(', ')
+
 export function hasCoords(item) {
     return item && typeof item.latitude === 'number' && typeof item.longitude === 'number'
 }

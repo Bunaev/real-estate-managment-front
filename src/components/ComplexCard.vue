@@ -31,6 +31,7 @@
 
         <!-- Рендер ЖК: всегда в потоке (opacity), lazy-загрузка работает корректно -->
         <img
+          v-if="coverSrc"
           :src="coverSrc"
           :alt="complex.name"
           loading="lazy"
@@ -66,7 +67,7 @@
       </p>
       <p class="flex items-center gap-2 text-sm text-slate-500">
         <AppIcon name="developer" :size="15" stroke="#94a3b8" class="shrink-0" />
-        <span class="line-clamp-1">{{ complex.developer }}</span>
+        <span class="line-clamp-1">{{ complexDeveloper(complex) }}</span>
       </p>
 
       <!-- Метро: одна компактная строка на станцию (пешком/транспорт/машина) -->
@@ -111,8 +112,8 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import MetroTimes from '@/components/MetroTimes.vue'
-import { renderCoverUrl } from '@/api'
-import { complexGradient, firstLetter, formatMeters } from '@/utils/format.js'
+import { publicFileUrl } from '@/api'
+import { complexGradient, firstLetter, formatMeters, complexDeveloper, complexAddressLine } from '@/utils/format.js'
 import { stationDotStyle, stationLineTitle } from '@/utils/metroLines.js'
 
 const props = defineProps({
@@ -150,16 +151,15 @@ const onImgError = () => {
 
 const gradient = computed(() => complexGradient(props.complex?.id || 1))
 const coverSrc = computed(() => {
-  const u = renderCoverUrl(props.complex?.id)
-  return attempts.value ? `${u}${u.includes('?') ? '&' : '?'}attempt=${attempts.value}` : u
+  const url = publicFileUrl(props.complex?.keyRenderPath)
+  if (!url) return null
+  return attempts.value ? `${url}${url.includes('?') ? '&' : '?'}attempt=${attempts.value}` : url
 })
 const metroLine = computed(() => (props.complex?.metroDistances || []).slice(0, 3))
 const countBuildings = computed(() => props.complex?.countBuildings || 0)
 const countEntrance = computed(() => props.complex?.countEntrance || 0)
 const countApartment = computed(() => props.complex?.countApartment || 0)
-const addressLine = computed(() =>
-  [props.complex?.location, props.complex?.district, props.complex?.address].filter(Boolean).join(', ')
-)
+const addressLine = computed(() => complexAddressLine(props.complex))
 
 const go = () => {
   router.push({

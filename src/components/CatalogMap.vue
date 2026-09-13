@@ -98,7 +98,7 @@
             </span>
             <span class="min-w-0 flex-1">
               <span class="block truncate text-xs font-bold text-slate-800">{{ c.name }}</span>
-              <span class="block truncate text-[11px] text-slate-400">{{ [c.district, c.developer].filter(Boolean).join(' · ') }}</span>
+              <span class="block truncate text-[11px] text-slate-400">{{ [complexDistrict(c), complexDeveloper(c)].filter(Boolean).join(' · ') }}</span>
             </span>
           </button>
           <p v-if="!filteredPoints.length" class="px-3 py-4 text-center text-xs text-slate-400">Ничего не найдено</p>
@@ -114,8 +114,8 @@
           <!-- render -->
           <div class="relative h-36 w-full overflow-hidden bg-slate-100">
             <img
-              v-if="renderVisible"
-              :src="renderCoverUrl(selected.id)"
+              v-if="renderVisible && publicFileUrl(selected.keyRenderPath)"
+              :src="publicFileUrl(selected.keyRenderPath)"
               :alt="selected.name"
               class="h-full w-full object-cover"
               @error="renderVisible = false"
@@ -135,7 +135,7 @@
             </p>
             <p class="flex items-center gap-2 text-xs text-slate-500">
               <AppIcon name="developer" :size="14" stroke="#94a3b8" class="shrink-0" />
-              <span class="truncate">{{ selected.developer }}</span>
+              <span class="truncate">{{ complexDeveloper(selected) }}</span>
             </p>
 
             <div v-if="metroOf(selected).length" class="flex flex-wrap gap-1.5">
@@ -170,8 +170,17 @@ import { Map as MlMap, Marker, NavigationControl, LngLatBounds } from 'maplibre-
 import 'maplibre-gl/dist/maplibre-gl.css'
 import AppIcon from '@/components/AppIcon.vue'
 import MetroTimes from '@/components/MetroTimes.vue'
-import { complexApi, renderCoverUrl } from '@/api'
-import { complexGradient, firstLetter, apartmentTypeLabel, statusLabel, bathroomLabel } from '@/utils/format.js'
+import { complexApi, publicFileUrl } from '@/api'
+import {
+  complexGradient,
+  firstLetter,
+  apartmentTypeLabel,
+  statusLabel,
+  bathroomLabel,
+  complexAddressLine,
+  complexDeveloper,
+  complexDistrict,
+} from '@/utils/format.js'
 import { stationDotStyle, stationLineTitle } from '@/utils/metroLines.js'
 import { rasterMapStyle, SPB_CENTER, SPB_ZOOM, prefersReducedMotion, escapeHtml } from '@/utils/mapStyle.js'
 
@@ -199,10 +208,10 @@ let resizeObserver = null
 const filteredPoints = computed(() => {
   const q = query.value.trim().toLowerCase()
   if (!q) return points.value
-  return points.value.filter((c) => `${c.name} ${c.developer} ${c.district} ${c.address}`.toLowerCase().includes(q))
+  return points.value.filter((c) => `${c.name} ${complexDeveloper(c)} ${complexDistrict(c)} ${c.address}`.toLowerCase().includes(q))
 })
 
-const addressLineOf = (c) => [c.location, c.district, c.address].filter(Boolean).join(', ')
+const addressLineOf = (c) => complexAddressLine(c)
 const metroOf = (c) => (c.metroDistances || []).slice(0, 2)
 
 /* ---------------- активные фильтры ---------------- */

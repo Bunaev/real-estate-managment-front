@@ -30,6 +30,8 @@ const icons = {
   apartment: { viewBox: '0 0 24 24', paths: [{ d: 'M3 21h18M5 21V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14' }, { d: 'M9 3v2M15 3v2M8 11h8M8 15h8M8 19h8' }] },
   entrance: { viewBox: '0 0 24 24', paths: [{ d: 'M5 12h14M12 5l-7 7 7 7' }] },
   door: { viewBox: '0 0 24 24', paths: [{ d: 'M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16' }, { d: 'M3 21h18' }, { d: 'M14.6 12.5h.01' }] },
+  kitchen: { viewBox: '0 0 24 24', paths: [{ type: 'rect', x: '4', y: '5', width: '16', height: '15', rx: '2' }, { type: 'circle', cx: '9', cy: '11', r: '1.6' }, { type: 'circle', cx: '15', cy: '11', r: '1.6' }, { d: 'M8 16h8' }] },
+  bath: { viewBox: '0 0 24 24', paths: [{ d: 'M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-3Z' }, { d: 'M7 12V6.5A2.5 2.5 0 0 1 11.6 5.3' }, { d: 'M6.5 21l.8-2M17.5 21l-.8-2' }] },
   filter: { viewBox: '0 0 24 24', paths: [{ d: 'M3 5h18l-7 8v5l-4 2v-7L3 5Z' }] },
   'arrow-left': { viewBox: '0 0 24 24', paths: [{ d: 'M19 12H5M11 5l-7 7 7 7' }] },
   'arrow-right': { viewBox: '0 0 24 24', paths: [{ d: 'M5 12h14M13 5l7 7-7 7' }] },

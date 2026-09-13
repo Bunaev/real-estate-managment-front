@@ -61,10 +61,13 @@ export const apartmentApi = {
     api.get('/apartments/filter', { params: { page, size, ...filters } }),
 }
 
-/* URL картинки-рендера ЖК (GET /complexes/{id}/render) */
-export function renderCoverUrl(id) {
-  const base = (import.meta.env.VITE_API_URL || '/api').replace(/\/+$/, '')
-  return `${base}/complexes/${id}/render`
+/* Публичное файловое хранилище (MinIO). В DTO приходит только ключ (keyRenderPath). */
+const PUBLIC_STORAGE_BASE = (import.meta.env.VITE_PUBLIC_STORAGE_URL || 'http://localhost:9000/rem-public').replace(/\/+$/, '')
+
+/** Ссылка на публичный файл по ключу из DTO (keyRenderPath и т.п.). */
+export function publicFileUrl(key) {
+  if (!key) return null
+  return `${PUBLIC_STORAGE_BASE}/${String(key).replace(/^\/+/, '')}`
 }
 
 /* ---------------- Управление ---------------- */
@@ -100,8 +103,8 @@ export const manageApi = {
   getEntrances: (buildingId) => api.get('/entrances/by-building/' + buildingId),
   createEntrance: (buildingId, data) => api.post('/entrances', data, { params: { buildingId } }),
 
-  // Квартиры
-  getApartments: (complexId, page = 0, size = 12) => api.get('/apartments', { params: { complexId, page, size } }),
+  // Квартиры (FilterDTO: residentialComplexId / buildingId / entranceId / status / types / диапазоны)
+  getApartments: (params = {}, page = 0, size = 20) => api.get('/apartments/filter', { params: { page, size, ...params } }),
   updateApartment: (id, data) => api.put('/apartments/' + id, data),
   deleteApartment: (id) => api.delete('/apartments/' + id),
   importApartments: (entranceId, file) => {

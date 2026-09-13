@@ -31,12 +31,20 @@
         class="flex flex-col overflow-hidden rounded-3xl bg-white/90 p-5 shadow-sm ring-1 ring-slate-200/70 backdrop-blur transition hover:shadow-lg hover:ring-indigo-200"
       >
         <div class="flex items-center gap-4">
-          <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-base font-black text-white shadow-lg" :style="{ background: gradientFor(c.id) }">
-            {{ firstLetter(c.name) }}
+          <span class="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-base font-black text-white shadow-lg ring-1 ring-slate-900/5" :style="{ background: gradientFor(c.id) }">
+            <span>{{ firstLetter(c.name) }}</span>
+            <img
+              v-if="coverOf(c) && !brokenCovers.has(c.id)"
+              :src="coverOf(c)"
+              :alt="c.name"
+              loading="lazy"
+              class="absolute inset-0 h-full w-full object-cover"
+              @error="brokenCovers.add(c.id)"
+            />
           </span>
           <div class="min-w-0 flex-1">
             <p class="truncate text-base font-extrabold tracking-tight text-slate-900">{{ c.name }}</p>
-            <p class="mt-0.5 truncate text-xs text-slate-500">{{ [c.developer, c.location, c.district].filter(Boolean).join(' · ') }}</p>
+            <p class="mt-0.5 truncate text-xs text-slate-500">{{ [complexDeveloper(c), complexLocation(c), complexDistrict(c)].filter(Boolean).join(' · ') }}</p>
           </div>
           <span class="hidden shrink-0 flex-col items-end text-right sm:flex">
             <b class="text-lg font-black tabular-nums text-indigo-600">{{ c.countApartment || 0 }}</b>
@@ -262,9 +270,15 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import AppIcon from '@/components/AppIcon.vue'
 // Мини-карта выбора точки грузится лениво вместе с maplibre-gl
 const MapPicker = defineAsyncComponent(() => import('@/components/MapPicker.vue'))
-import { manageApi, referenceApi, complexApi, renderCoverUrl } from '@/api'
+import { manageApi, referenceApi, complexApi, publicFileUrl } from '@/api'
 import { useUiStore } from '@/stores/uiStore'
-import { complexGradient, firstLetter } from '@/utils/format.js'
+import {
+  complexGradient,
+  firstLetter,
+  complexDeveloper,
+  complexLocation,
+  complexDistrict,
+} from '@/utils/format.js'
 
 const props = defineProps({
   action: { type: String, default: '' },
@@ -356,10 +370,12 @@ const onCoordInput = (key, raw) => {
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
   if (!q) return complexes.value
-  return complexes.value.filter((c) => `${c.name} ${c.developer} ${c.location} ${c.district}`.toLowerCase().includes(q))
+  return complexes.value.filter((c) => `${c.name} ${complexDeveloper(c)} ${complexLocation(c)} ${complexDistrict(c)}`.toLowerCase().includes(q))
 })
 
 const gradientFor = (id) => complexGradient(id)
+const coverOf = (c) => publicFileUrl(c?.keyRenderPath)
+const brokenCovers = ref(new Set())
 
 function emptyBuilding() {
   return { id: null, name: '', completionDate: '', keyHandoverDate: '', entrances: [] }
@@ -435,18 +451,17 @@ const openMaster = async (id = null) => {
 
   if (id) {
     try {
-      // edit-DTO не содержит координат — берём их из детальной карточки
-      const [editRes, detailRes] = await Promise.all([manageApi.getComplexEdit(id), complexApi.getComplex(id)])
-      const d = editRes.data
-      const det = detailRes.data || {}
+      // edit-DTO содержит всё необходимое: связи, метро, корпуса, координаты и ключ рендера
+      const res = await manageApi.getComplexEdit(id)
+      const d = res.data
       master.value = {
         name: d.name || '',
         address: d.address || '',
         locationId: d.locationId ?? null,
         districtId: d.districtId ?? null,
         developerId: d.developerId ?? null,
-        latitude: det.latitude ?? null,
-        longitude: det.longitude ?? null,
+        latitude: d.latitude ?? null,
+        longitude: d.longitude ?? null,
         metro: (d.metroDistances || []).map((m) => ({ metroStationId: m.metroStationId, distance: m.distance })),
         buildings:
           d.buildings && d.buildings.length
@@ -459,7 +474,8 @@ const openMaster = async (id = null) => {
               }))
             : [emptyBuilding()],
       }
-      existingRenderUrl.value = `${renderCoverUrl(id)}?v=${Date.now()}`
+      const keyUrl = publicFileUrl(d.keyRenderPath)
+      existingRenderUrl.value = keyUrl ? `${keyUrl}?v=${Date.now()}` : null
       previewUrl.value = existingRenderUrl.value
       if (d.locationId) await loadDistricts(d.locationId)
     } catch (e) {

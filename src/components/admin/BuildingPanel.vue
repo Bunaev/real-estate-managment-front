@@ -22,7 +22,7 @@
         <div class="min-w-64 flex-1">
           <label class="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-400">Жилой комплекс</label>
           <select v-model="complexId" class="field">
-            <option v-for="c in complexes" :key="c.id" :value="c.id">{{ c.name }} — {{ c.developer }}</option>
+            <option v-for="c in complexes" :key="c.id" :value="c.id">{{ c.name }} — {{ c.developerName }}</option>
           </select>
         </div>
         <div class="pb-1">
@@ -56,9 +56,15 @@
             <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-base font-black text-white shadow-md shadow-indigo-600/25">{{ bi + 1 }}</span>
             <div class="min-w-0 flex-1">
               <p class="truncate text-base font-extrabold tracking-tight text-slate-900">{{ b.name }}</p>
-              <p class="mt-0.5 flex items-center gap-3 text-xs text-slate-500">
-                <span class="inline-flex items-center gap-1"><AppIcon name="calendar" :size="12" /> сдача {{ b.completionDate || '—' }}</span>
-                <span class="inline-flex items-center gap-1"><AppIcon name="calendar" :size="12" /> ключи {{ b.keyHandoverDate || '—' }}</span>
+              <p class="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-500">
+                <span class="inline-flex items-center gap-1">
+                  <AppIcon name="calendar" :size="12" />
+                  сдача: <b class="text-slate-700">{{ b.completionDate ? formatDate(b.completionDate) : '—' }}</b>
+                </span>
+                <span class="inline-flex items-center gap-1">
+                  <AppIcon name="calendar" :size="12" />
+                  ключи: <b class="text-slate-700">{{ b.keyHandoverDate ? formatDate(b.keyHandoverDate) : '—' }}</b>
+                </span>
               </p>
             </div>
             <button class="btn-sm" title="Добавить секцию в этот корпус" @click="openEntranceModal(b.id)">
@@ -73,7 +79,8 @@
               <div v-for="e in b.entrances" :key="e.id" class="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/70 bg-slate-50/70 px-3.5 py-2.5 transition hover:border-indigo-200">
                 <AppIcon name="door" :size="16" stroke="#6366f1" />
                 <span class="min-w-0 flex-1 truncate text-sm font-bold text-slate-700">{{ e.name }}</span>
-                <span class="hidden text-xs text-slate-400 sm:inline">ID {{ e.id }}</span>
+                <span v-if="e.maxFloor" class="shrink-0 rounded-full bg-white px-2 py-0.5 text-[11px] font-bold text-slate-500 ring-1 ring-slate-200/80">до {{ e.maxFloor }} эт.</span>
+                <span v-else class="hidden text-[11px] text-slate-400 sm:inline">ID {{ e.id }}</span>
                 <button class="btn-sm btn-sm-light" title="Открыть квартиры секции" @click="goFlats(b.id, e.id)">
                   <AppIcon name="apartment" :size="13" /> Квартиры
                 </button>
@@ -151,6 +158,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import ImportExportHelp from '@/components/ImportExportHelp.vue'
+import { formatDate } from '@/utils/format.js'
 import { manageApi, complexApi } from '@/api'
 import { useUiStore } from '@/stores/uiStore'
 
@@ -201,8 +209,10 @@ const loadBuildings = async () => {
   if (!complexId.value) return
   loadingBuildings.value = true
   try {
-    const res = await manageApi.getBuildings(complexId.value)
-    buildings.value = res.data || []
+    // Дата сдачи и ключей приходят только в edit-DTO (корпуса с entrances и maxFloor),
+    // короткий /buildings/by-complex их не содержит.
+    const res = await manageApi.getComplexEdit(complexId.value)
+    buildings.value = res.data?.buildings || []
   } catch (e) {
     buildings.value = []
     ui.toast(e.message, 'error')

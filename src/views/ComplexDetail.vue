@@ -40,7 +40,7 @@
 
         <!-- Рендер ЖК, проявляется справа красивым градиентом -->
         <img
-          v-show="renderOk"
+          v-show="renderOk && !!renderSrc"
           :src="renderSrc"
           :alt="hero.name"
           class="hero-render pointer-events-none absolute inset-y-0 right-0 hidden h-full w-full max-w-[64%] object-cover lg:block"
@@ -57,7 +57,7 @@
           <h1 class="mt-4 max-w-4xl text-3xl font-black tracking-tight text-white drop-shadow-sm sm:text-4xl lg:text-5xl">{{ hero.name }}</h1>
           <p class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-white/85 sm:text-base">
             <span class="inline-flex items-center gap-1.5"><AppIcon name="location" :size="15" /> {{ addressLine }}</span>
-            <span v-if="hero.developer" class="inline-flex items-center gap-1.5"><AppIcon name="developer" :size="15" /> {{ hero.developer }}</span>
+            <span v-if="complexDeveloper(hero)" class="inline-flex items-center gap-1.5"><AppIcon name="developer" :size="15" /> {{ complexDeveloper(hero) }}</span>
           </p>
 
           <div class="mt-7 grid max-w-2xl grid-cols-3 gap-3">
@@ -189,11 +189,20 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { complexApi, renderCoverUrl } from '@/api'
+import { complexApi, publicFileUrl } from '@/api'
 import AppIcon from '@/components/AppIcon.vue'
 import ApartmentsExplorer from '@/components/ApartmentsExplorer.vue'
 import MetroTimes from '@/components/MetroTimes.vue'
-import { complexGradient, firstLetter, walkTimeText, formatMeters } from '@/utils/format.js'
+import {
+  complexGradient,
+  firstLetter,
+  walkTimeText,
+  formatMeters,
+  complexDeveloper,
+  complexLocation,
+  complexDistrict,
+  complexAddressLine,
+} from '@/utils/format.js'
 import { stationDotStyle, stationLineTitle } from '@/utils/metroLines.js'
 
 const route = useRoute()
@@ -207,7 +216,7 @@ const loading = ref(true)
 const error = ref(null)
 const renderOk = ref(false)
 
-const renderSrc = computed(() => renderCoverUrl(id.value))
+const renderSrc = computed(() => publicFileUrl(hero.value?.keyRenderPath))
 
 const readSummary = () => {
   try {
@@ -221,14 +230,12 @@ const readSummary = () => {
 const hero = computed(() => complex.value || summary.value)
 const gradient = computed(() => complexGradient(Number(id.value) || hero.value?.id || 1))
 
-const addressLine = computed(() =>
-  [hero.value?.location, hero.value?.district, hero.value?.address].filter(Boolean).join(', ')
-)
+const addressLine = computed(() => complexAddressLine(hero.value))
 
 const infoRows = computed(() => [
-  { key: 'dev', label: 'Застройщик', icon: 'developer', value: hero.value?.developer, bg: 'bg-indigo-50 text-indigo-600', color: '#4f46e5' },
-  { key: 'loc', label: 'Локация', icon: 'location', value: hero.value?.location, bg: 'bg-sky-50 text-sky-600', color: '#0284c7' },
-  { key: 'dist', label: 'Район', icon: 'map', value: hero.value?.district, bg: 'bg-violet-50 text-violet-600', color: '#7c3aed' },
+  { key: 'dev', label: 'Застройщик', icon: 'developer', value: complexDeveloper(hero.value), bg: 'bg-indigo-50 text-indigo-600', color: '#4f46e5' },
+  { key: 'loc', label: 'Локация', icon: 'location', value: complexLocation(hero.value), bg: 'bg-sky-50 text-sky-600', color: '#0284c7' },
+  { key: 'dist', label: 'Район', icon: 'map', value: complexDistrict(hero.value), bg: 'bg-violet-50 text-violet-600', color: '#7c3aed' },
   { key: 'addr', label: 'Адрес', icon: 'apartment', value: hero.value?.address, bg: 'bg-emerald-50 text-emerald-600', color: '#059669' },
 ])
 

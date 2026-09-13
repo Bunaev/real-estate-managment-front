@@ -94,22 +94,53 @@
     <div v-else class="overflow-hidden rounded-2xl bg-white/85 ring-1 ring-slate-200/70 backdrop-blur">
       <div v-if="!apartments.length" class="px-5 py-10 text-center text-sm text-slate-400">В секции нет квартир — загрузите их из Excel</div>
       <div v-else class="divide-y divide-slate-100">
-        <div v-for="a in apartments" :key="a.id" class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 transition hover:bg-slate-50/70 sm:px-5">
-          <span class="w-9 shrink-0 text-sm font-black text-slate-300">№{{ a.number }}</span>
-          <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold" :class="typeChip(a.type)">{{ apartmentTypeLabel(a.type) }}</span>
-          <span class="min-w-0 flex-1 text-xs text-slate-500">
-            {{ a.floor }} эт. · {{ formatArea(a.area) }} · {{ formatMoney(a.price) }}
-            <span class="mx-1 text-slate-300">|</span>
-            балкон: {{ a.hasBalcony ? 'есть' : 'нет' }} · {{ bathroomLabel(a.bathroomType) }}
-          </span>
-          <span class="rounded-full px-2.5 py-1 text-[11px] font-bold" :class="statusChip(a.status)">{{ statusLabel(a.status) }}</span>
-          <div class="flex items-center gap-1">
-            <button class="icon-btn" title="Изменить" @click="openEdit(a)">
-              <AppIcon name="edit" :size="15" stroke="#6366f1" />
-            </button>
-            <button class="icon-btn" title="Удалить" @click="askDelete(a)">
-              <AppIcon name="trash" :size="15" stroke="#e11d48" />
-            </button>
+        <div v-for="a in apartments" :key="a.id" class="px-4 py-3 transition hover:bg-slate-50/70 sm:px-5">
+          <div class="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-2" @click="toggleRow(a.id)">
+            <span class="w-9 shrink-0 text-sm font-black text-slate-300">№{{ a.number }}</span>
+            <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold" :class="typeChip(a.type)">{{ apartmentTypeLabel(a.type) }}</span>
+            <span class="min-w-0 flex-1 text-xs text-slate-500">
+              {{ a.floor }} эт. · {{ formatArea(a.area) }} · {{ formatMoney(a.price) }}
+              <span class="mx-1 text-slate-300">|</span>
+              балкон: {{ a.hasBalcony ? 'есть' : 'нет' }} · {{ bathroomLabel(a.bathroomType) }}
+            </span>
+            <span
+              v-if="quartersOf(a)"
+              class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold tabular-nums text-slate-500"
+              title="Срок сдачи корпуса / выдача ключей"
+            >
+              {{ quartersOf(a) }}
+            </span>
+            <span class="rounded-full px-2.5 py-1 text-[11px] font-bold" :class="statusChip(a.status)">{{ statusLabel(a.status) }}</span>
+            <div class="flex items-center gap-1">
+              <button class="icon-btn" title="Изменить" @click.stop="openEdit(a)">
+                <AppIcon name="edit" :size="15" stroke="#6366f1" />
+              </button>
+              <button class="icon-btn" title="Удалить" @click.stop="askDelete(a)">
+                <AppIcon name="trash" :size="15" stroke="#e11d48" />
+              </button>
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition" :class="expandedId === a.id ? 'rotate-180 text-indigo-600' : ''">
+                <AppIcon name="chevronDown" :size="15" />
+              </span>
+            </div>
+          </div>
+
+          <!-- Состав площадей -->
+          <div v-if="hasAreas(a)" class="mt-2.5 pl-11">
+            <ApartmentRooms :apartment="a" />
+          </div>
+
+          <!-- Карточка квартиры -->
+          <div class="expander" :class="expandedId === a.id && expandOpen ? 'open' : ''">
+            <div class="overflow-hidden">
+              <div class="pt-3">
+                <ApartmentCard
+                  :apartment="a"
+                  :quarters="quartersOf(a)"
+                  :building-name="a.entrance?.building?.name || ''"
+                  :entrance-name="a.entrance?.name || ''"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -185,14 +216,16 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import ApartmentRooms from '@/components/ApartmentRooms.vue'
+import ApartmentCard from '@/components/ApartmentCard.vue'
 import ImportExportHelp from '@/components/ImportExportHelp.vue'
 import { manageApi, complexApi } from '@/api'
 import { useUiStore } from '@/stores/uiStore'
-import { APARTMENT_TYPES, STATUSES, apartmentTypeLabel, statusLabel, bathroomLabel } from '@/utils/format.js'
+import { APARTMENT_TYPES, STATUSES, apartmentTypeLabel, statusLabel, bathroomLabel, formatQuarter } from '@/utils/format.js'
 
 const props = defineProps({
   action: { type: String, default: '' },
@@ -244,7 +277,7 @@ const formatArea = (v) => new Intl.NumberFormat('ru-RU', { minimumFractionDigits
 
 const loadComplexes = async () => {
   try {
-    const res = await complexApi.getComplexes({}, 0, 50)
+    const res = await complexApi.getComplexes({}, 0, 100)
     complexes.value = res.data.content || []
     if (!complexId.value && complexes.value.length) {
       const prefer = complexes.value.find((c) => c.id === props.chosen?.complexId)
@@ -279,10 +312,14 @@ const loadEntrances = async () => {
   }
 }
 const loadApartments = async () => {
-  if (!entranceId.value) return
+  if (!complexId.value) return
   loadingApartments.value = true
   try {
-    const res = await manageApi.getApartments(complexId.value, page.value, pageSize.value)
+    // FilterDTO: комплекс + корпус + секция — иначе список игнорирует переключатели
+    const params = { residentialComplexId: complexId.value }
+    if (buildingId.value) params.buildingId = buildingId.value
+    if (entranceId.value) params.entranceId = entranceId.value
+    const res = await manageApi.getApartments(params, page.value, pageSize.value)
     apartments.value = res.data.content || []
     total.value = res.data.totalElements || 0
     totalPages.value = Math.max(1, res.data.totalPages || 1)
@@ -294,9 +331,54 @@ const loadApartments = async () => {
   }
 }
 
+/* Сроки сдачи/ключей кварталами: берём из edit-DTO (в квартире дат нет) */
+const buildingMeta = ref({})
+const loadBuildingMeta = async () => {
+  if (!complexId.value) return
+  try {
+    const res = await manageApi.getComplexEdit(complexId.value)
+    const map = {}
+    ;(res.data?.buildings || []).forEach((b) => {
+      ;(b.entrances || []).forEach((e) => {
+        map[e.id] = { completion: b.completionDate, handover: b.keyHandoverDate }
+      })
+    })
+    buildingMeta.value = map
+  } catch {
+    buildingMeta.value = {}
+  }
+}
+const quartersOf = (a) => {
+  const meta = buildingMeta.value[a?.entrance?.id]
+  if (!meta) return null
+  const parts = [formatQuarter(meta.completion), formatQuarter(meta.handover)].filter(Boolean)
+  return parts.length ? parts.join(' / ') : null
+}
+
+/* Разворачивание карточки квартиры */
+const expandedId = ref(null)
+const expandOpen = ref(false)
+const toggleRow = (id) => {
+  if (expandedId.value === id) {
+    expandOpen.value = false
+    setTimeout(() => {
+      if (expandedId.value === id) expandedId.value = null
+    }, 280)
+  } else {
+    expandedId.value = id
+  }
+}
+watch(expandedId, async (v) => {
+  if (v === null) return
+  expandOpen.value = false
+  await nextTick()
+  requestAnimationFrame(() => (expandOpen.value = true))
+})
+const hasAreas = (a) => a?.kitchenArea != null || a?.roomsArea != null || a?.bathroomArea != null || a?.hallwayArea != null
+
 watch(complexId, async () => {
   page.value = 0
-  await loadBuildings()
+  await Promise.all([loadBuildings(), loadBuildingMeta()])
 })
 watch(buildingId, async () => {
   page.value = 0
@@ -479,6 +561,15 @@ onMounted(() => {
   border: 2px solid rgba(255, 255, 255, 0.4);
   border-top-color: #fff;
   animation: spin 0.7s linear infinite;
+}
+/* Плавное раскрытие карточки квартиры */
+.expander {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.expander.open {
+  grid-template-rows: 1fr;
 }
 @keyframes spin {
   to {

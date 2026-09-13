@@ -1,4 +1,5 @@
-<!-- Публичный список квартир ЖК: фильтры → FilterDTO на бэкенд -->
+<!-- Публичный список квартир ЖК: фильтры → FilterDTO, сортировка по заголовкам,
+     раскрывающаяся карточка квартиры с планировками -->
 <template>
   <div class="space-y-5">
     <!-- Filters card -->
@@ -16,8 +17,8 @@
         </div>
       </div>
 
-      <!-- Row 1: корпус / секция / сортировка -->
-      <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <!-- Row 1: корпус / секция -->
+      <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <label class="label">Корпус</label>
           <select v-model="filters.buildingId" class="field" :disabled="!buildings.length" @change="filters.entranceId = null">
@@ -31,28 +32,6 @@
             <option :value="null">Все секции</option>
             <option v-for="e in availableEntrances" :key="e.id" :value="e.id">{{ e.name }}</option>
           </select>
-        </div>
-        <div>
-          <label class="label">Сортировка</label>
-          <div class="flex gap-2">
-            <select v-model="sortField" class="field flex-1">
-              <option value="price">По цене</option>
-              <option value="area">По площади</option>
-              <option value="floor">По этажу</option>
-              <option value="number">По номеру</option>
-              <option value="status">По статусу</option>
-            </select>
-            <button
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600"
-              :aria-label="sortDir === 'asc' ? 'По возрастанию' : 'По убыванию'"
-              :title="sortDir === 'asc' ? 'По возрастанию' : 'По убыванию'"
-              @click="toggleDir"
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" :class="sortDir === 'desc' ? 'rotate-180' : ''">
-                <path d="M12 5v14M6 13l6 6 6-6" />
-              </svg>
-            </button>
-          </div>
         </div>
       </div>
 
@@ -101,7 +80,6 @@
         <RangeField label="Цена, ₽" :from="filters.priceFrom" :to="filters.priceTo" from-ph="от" to-ph="до" @from="filters.priceFrom = $event" @to="filters.priceTo = $event" />
       </div>
 
-      <!-- Apply -->
       <div class="mt-5 flex justify-end border-t border-slate-100 pt-4">
         <button class="btn btn-primary" :disabled="loading" @click="apply">
           <span v-if="loading" class="loading-dot" />
@@ -115,6 +93,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
       <p class="text-sm text-slate-500">
         Показано <b class="text-slate-800">{{ apartments.length }}</b> из <b class="tabular-nums text-slate-800">{{ total }}</b> квартир
+        <span class="ml-2 text-xs text-slate-400">сортировка: {{ sortLabel }}</span>
         <span v-if="loading" class="ml-2 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-500"><span class="live-dot" /> загружаем…</span>
       </p>
       <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
@@ -137,48 +116,91 @@
     <!-- Table -->
     <div v-else class="overflow-hidden rounded-3xl bg-white/90 shadow-lg shadow-slate-900/5 ring-1 ring-slate-200/60 backdrop-blur">
       <div class="overflow-x-auto">
-        <table class="w-full min-w-[760px] text-left text-sm">
+        <table class="w-full min-w-[1150px] text-left text-sm">
           <thead>
-            <tr class="border-b border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              <th class="px-4 py-3">№</th>
-              <th class="px-3 py-3">Корпус · секция</th>
-              <th class="px-3 py-3">Тип</th>
-              <th class="px-3 py-3 text-center">Этаж</th>
-              <th class="px-3 py-3 text-center">Площадь</th>
-              <th class="px-3 py-3 text-right">Цена</th>
-              <th class="px-3 py-3 text-center">Балкон</th>
-              <th class="px-4 py-3 text-center">Статус</th>
+            <tr class="border-b border-slate-100 bg-slate-50/70">
+              <SortHeader label="№" field="number" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <th scope="col" class="px-3 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Корпус · секция</th>
+              <SortHeader label="Тип" field="type" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Этаж" field="floor" align="center" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Площадь" field="area" align="center" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Кухня" field="kitchenArea" align="center" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Комнаты" field="roomsArea" align="center" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Санузел, м²" field="bathroomArea" align="center" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Коридор" field="hallwayArea" align="center" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Цена" field="price" align="right" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Балкон" field="hasBalcony" align="center" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <SortHeader label="Статус" field="status" align="center" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
+              <th scope="col" class="w-12 px-3 py-3 pr-5" />
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <tr v-for="a in apartments" :key="a.id" :class="rowClass(a.status)">
-              <td class="px-4 py-3 text-base font-black text-slate-400">№{{ a.number }}</td>
-              <td class="px-3 py-3 text-xs text-slate-500">
-                <span class="font-semibold text-slate-700">{{ a.entrance?.building?.name || '' }}</span>
-                <span v-if="a.entrance"> · {{ a.entrance.name }}</span>
-              </td>
-              <td class="px-3 py-3">
-                <span class="rounded-full px-2.5 py-1 text-[11px] font-bold" :class="typeChip(a.type)">{{ apartmentTypeLabel(a.type) }}</span>
-              </td>
-              <td class="px-3 py-3 text-center tabular-nums">{{ a.floor }}</td>
-              <td class="px-3 py-3 text-center tabular-nums">{{ formatArea(a.area) }}</td>
-              <td class="px-3 py-3 text-right font-bold tabular-nums text-slate-900">{{ formatMoney(a.price) }}</td>
-              <td class="px-3 py-3 text-center text-xs">
-                <span v-if="a.hasBalcony" class="inline-flex items-center gap-1 font-semibold text-emerald-600">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 13l4 4L19 7" /></svg>есть
-                </span>
-                <span v-else class="font-semibold text-slate-300">—</span>
-              </td>
-              <td class="px-4 py-3 text-center">
-                <span class="rounded-full px-2.5 py-1 text-[11px] font-bold" :class="statusChip(a.status)">{{ statusLabel(a.status) }}</span>
-              </td>
-            </tr>
+            <template v-for="a in apartments" :key="a.id">
+              <tr
+                class="cursor-pointer transition-colors"
+                :class="[rowClass(a.status), expandedId === a.id ? 'bg-indigo-50/60' : '']"
+                @click="toggleRow(a.id)"
+              >
+                <td class="px-4 py-3 text-base font-black text-slate-400">№{{ a.number }}</td>
+                <td class="px-3 py-3 text-xs text-slate-500">
+                  <span class="font-semibold text-slate-700">{{ a.entrance?.building?.name || '' }}</span>
+                  <span v-if="a.entrance"> · {{ a.entrance.name }}</span>
+                  <span v-if="quartersOf(a)" class="mt-0.5 block text-[10px] font-semibold text-slate-400" title="Срок сдачи корпуса / выдача ключей">
+                    {{ quartersOf(a) }}
+                  </span>
+                </td>
+                <td class="px-3 py-3">
+                  <span class="rounded-full px-2.5 py-1 text-[11px] font-bold" :class="typeChip(a.type)">{{ apartmentTypeLabel(a.type) }}</span>
+                </td>
+                <td class="px-3 py-3 text-center tabular-nums">{{ a.floor }}</td>
+                <td class="px-3 py-3 text-center tabular-nums">{{ fmtArea(a.area) }}</td>
+                <td class="px-3 py-3 text-center">
+                  <span v-if="a.kitchenArea" class="tabular-nums text-slate-600">{{ fmtArea(a.kitchenArea) }}</span>
+                  <span v-else class="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-600" title="У студии кухня объединена с комнатой">в комнате</span>
+                </td>
+                <td class="px-3 py-3 text-center tabular-nums text-slate-600">{{ fmtArea(a.roomsArea) }}</td>
+                <td class="px-3 py-3 text-center tabular-nums text-slate-600">{{ fmtArea(a.bathroomArea) }}</td>
+                <td class="px-3 py-3 text-center tabular-nums text-slate-600">{{ fmtArea(a.hallwayArea) }}</td>
+                <td class="px-3 py-3 text-right font-bold tabular-nums text-slate-900">{{ formatMoney(a.price) }}</td>
+                <td class="px-3 py-3 text-center text-xs">
+                  <span v-if="a.hasBalcony" class="inline-flex items-center gap-1 font-semibold text-emerald-600">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 13l4 4L19 7" /></svg>есть
+                  </span>
+                  <span v-else class="font-semibold text-slate-300">—</span>
+                </td>
+                <td class="px-3 py-3 text-center">
+                  <span class="rounded-full px-2.5 py-1 text-[11px] font-bold" :class="statusChip(a.status)">{{ statusLabel(a.status) }}</span>
+                </td>
+                <td class="px-3 py-3 pr-5 text-center">
+                  <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-white text-slate-400 ring-1 ring-slate-200 transition" :class="expandedId === a.id ? 'rotate-180 text-indigo-600' : ''">
+                    <AppIcon name="chevronDown" :size="14" />
+                  </span>
+                </td>
+              </tr>
+
+              <!-- Раскрывающаяся карточка квартиры -->
+              <tr v-if="expandedId === a.id">
+                <td colspan="13" class="bg-slate-50/70 p-0">
+                  <div class="expander" :class="expandOpen ? 'open' : ''">
+                    <div class="overflow-hidden">
+                      <div class="px-3 pb-4 pt-3 sm:px-4">
+                        <ApartmentCard
+                          :apartment="a"
+                          :quarters="quartersOf(a)"
+                          :building-name="a.entrance?.building?.name || ''"
+                          :entrance-name="a.entrance?.name || ''"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Pagination -->
     <div v-if="totalPages > 1" class="mt-6">
       <PaginationBar :current-page="page" :total-pages="totalPages" @page-change="changePage" />
     </div>
@@ -186,12 +208,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import AppIcon from '@/components/AppIcon.vue'
 import RangeField from '@/components/RangeField.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
-import { apartmentApi } from '@/api'
-import { APARTMENT_TYPES, STATUSES, apartmentTypeLabel, statusLabel } from '@/utils/format.js'
+import SortHeader from '@/components/SortHeader.vue'
+import ApartmentCard from '@/components/ApartmentCard.vue'
+import { apartmentApi, manageApi } from '@/api'
+import { APARTMENT_TYPES, STATUSES, apartmentTypeLabel, statusLabel, formatQuarter } from '@/utils/format.js'
 
 const props = defineProps({
   complexId: { type: [String, Number], required: true },
@@ -227,6 +251,8 @@ const total = ref(0)
 const totalPages = ref(1)
 const loading = ref(false)
 const error = ref('')
+const expandedId = ref(null)
+const expandOpen = ref(false)
 
 const availableEntrances = computed(() => {
   const b = props.buildings.find((x) => x.id === filters.buildingId)
@@ -251,6 +277,30 @@ const activeCount = computed(() => {
   ].filter(Boolean).length
 })
 
+const SORT_LABELS = {
+  number: 'номеру',
+  type: 'типу',
+  floor: 'этажу',
+  area: 'площади',
+  kitchenArea: 'площади кухни',
+  roomsArea: 'площади комнат',
+  bathroomArea: 'площади санузла',
+  hallwayArea: 'площади коридора',
+  price: 'цене',
+  hasBalcony: 'балкону',
+  status: 'статусу',
+}
+const sortLabel = computed(() => `${SORT_LABELS[sortField.value] || sortField.value} ${sortDir.value === 'asc' ? '↑' : '↓'}`)
+
+const setSort = (field) => {
+  if (sortField.value === field) sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+  else {
+    sortField.value = field
+    sortDir.value = 'asc'
+  }
+  apply()
+}
+
 const toggleType = (v) => {
   const i = filters.types.indexOf(v)
   if (i >= 0) filters.types.splice(i, 1)
@@ -259,9 +309,45 @@ const toggleType = (v) => {
 const toggleStatus = (v) => {
   filters.status = filters.status === v ? null : v
 }
-const toggleDir = () => {
-  sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-  load()
+
+const toggleRow = (id) => {
+  if (expandedId.value === id) {
+    expandOpen.value = false
+    setTimeout(() => {
+      if (expandedId.value === id) expandedId.value = null
+    }, 280)
+  } else {
+    expandedId.value = id
+  }
+}
+watch(expandedId, async (v) => {
+  if (v === null) return
+  expandOpen.value = false
+  await nextTick()
+  requestAnimationFrame(() => (expandOpen.value = true))
+})
+
+/* Сроки сдачи/ключей по секциям */
+const buildingMeta = ref({})
+const loadBuildingMeta = async () => {
+  try {
+    const res = await manageApi.getComplexEdit(props.complexId)
+    const map = {}
+    ;(res.data?.buildings || []).forEach((b) => {
+      ;(b.entrances || []).forEach((e) => {
+        map[e.id] = { completion: b.completionDate, handover: b.keyHandoverDate }
+      })
+    })
+    buildingMeta.value = map
+  } catch {
+    buildingMeta.value = {}
+  }
+}
+const quartersOf = (a) => {
+  const meta = buildingMeta.value[a?.entrance?.id]
+  if (!meta) return null
+  const parts = [formatQuarter(meta.completion), formatQuarter(meta.handover)].filter(Boolean)
+  return parts.length ? parts.join(' / ') : null
 }
 
 const load = async () => {
@@ -298,6 +384,7 @@ const load = async () => {
 }
 
 const apply = () => {
+  expandedId.value = null
   page.value = 0
   load()
 }
@@ -319,31 +406,34 @@ const resetFilters = () => {
   apply()
 }
 const changePage = (p) => {
+  expandedId.value = null
   page.value = p
   load()
 }
 
-/* Открытие страницы ЖК — сразу показываем все квартиры комплекса (фильтры пустые) */
-onMounted(load)
-
 watch(pageSize, () => {
+  expandedId.value = null
   page.value = 0
   load()
 })
 
+/* Открытие страницы ЖК — сразу показываем все квартиры комплекса (фильтры пустые) */
+onMounted(() => {
+  loadBuildingMeta()
+  load()
+})
+
 const formatMoney = (v) => new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Number(v) || 0) + ' ₽'
-const formatArea = (v) => new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(v) || 0) + ' м²'
+const fmtArea = (v) => (v ? Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' м²' : '—')
 const typeChip = (t) =>
   ({ STUDIO: 'bg-sky-50 text-sky-700', ONE_ROOM: 'bg-indigo-50 text-indigo-700', TWO_ROOM: 'bg-violet-50 text-violet-700', THREE_ROOM: 'bg-fuchsia-50 text-fuchsia-700', FOUR_ROOM: 'bg-pink-50 text-pink-700' }[t] || 'bg-slate-100 text-slate-600')
 const statusChip = (s) =>
   ({ AVAILABLE: 'bg-emerald-50 text-emerald-700', RESERVED: 'bg-amber-50 text-amber-700', SOLD: 'bg-rose-50 text-rose-700' }[s] || 'bg-slate-100 text-slate-600')
 
-/* Подсветка строк по статусу: свободные — обычные, забронированные — светло-серые,
-   проданные — тёмно-серые. Текст остаётся тёмным и читаемым на любом фоне. */
 const rowClass = (s) => {
-  if (s === 'RESERVED') return 'bg-slate-100 transition-colors hover:bg-slate-200'
-  if (s === 'SOLD') return 'bg-slate-300 transition-colors hover:bg-slate-400/60'
-  return 'transition-colors hover:bg-indigo-50/50'
+  if (s === 'RESERVED') return 'bg-slate-100 hover:bg-slate-200'
+  if (s === 'SOLD') return 'bg-slate-300 hover:bg-slate-400/60'
+  return 'hover:bg-indigo-50/50'
 }
 </script>
 
@@ -413,5 +503,15 @@ const rowClass = (s) => {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Плавное раскрытие карточки квартиры */
+.expander {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.expander.open {
+  grid-template-rows: 1fr;
 }
 </style>
