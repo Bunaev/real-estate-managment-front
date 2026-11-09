@@ -2,92 +2,111 @@
      раскрывающаяся карточка квартиры с планировками -->
 <template>
   <div class="space-y-5">
-    <!-- Filters card -->
-    <section class="rounded-3xl bg-white/85 p-5 shadow-lg shadow-slate-900/5 ring-1 ring-slate-200/60 backdrop-blur sm:p-6">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <h3 class="flex items-center gap-2 text-base font-extrabold tracking-tight text-slate-900">
-          <AppIcon name="apartment" :size="18" stroke="#6366f1" />
-          Фильтр квартир
-        </h3>
-        <div class="flex items-center gap-2">
-          <span v-if="activeCount" class="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-600">активных: {{ activeCount }}</span>
-          <button class="btn btn-ghost !px-3 !py-1.5 !text-xs" @click="resetFilters">
-            <AppIcon name="rotate" :size="13" /> Сбросить
+      <!-- Filters card -->
+      <section class="overflow-hidden rounded-3xl bg-white/85 shadow-lg shadow-slate-900/5 ring-1 ring-slate-200/60 backdrop-blur">
+        <button
+          class="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-slate-50/60"
+          :aria-expanded="filterOpen"
+          @click="filterOpen = !filterOpen"
+        >
+          <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 text-indigo-600">
+            <AppIcon name="filter" :size="18" />
+          </span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-sm font-bold text-slate-800">Фильтр квартир</span>
+            <span class="block truncate text-xs text-slate-400">
+              <template v-if="activeCount">выбрано параметров: {{ activeCount }}</template>
+              <template v-else>корпус, секция, тип, этаж, площадь и цена</template>
+            </span>
+          </span>
+          <span v-if="activeCount" class="shrink-0 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">{{ activeCount }}</span>
+          <button
+            v-if="activeCount"
+            class="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:bg-white hover:text-slate-800"
+            @click.stop="resetFilters"
+          >
+            Сбросить
           </button>
-        </div>
-      </div>
-
-      <!-- Row 1: корпус / секция -->
-      <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label class="label">Корпус</label>
-          <select v-model="filters.buildingId" class="field" :disabled="!buildings.length" @change="filters.entranceId = null">
-            <option :value="null">Все корпуса</option>
-            <option v-for="b in buildings" :key="b.id" :value="b.id">{{ b.name }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="label">Секция</label>
-          <select v-model="filters.entranceId" class="field" :disabled="!availableEntrances.length">
-            <option :value="null">Все секции</option>
-            <option v-for="e in availableEntrances" :key="e.id" :value="e.id">{{ e.name }}</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Row 2: чипы-фильтры -->
-      <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div>
-          <label class="label">Тип квартиры</label>
-          <div class="flex flex-wrap gap-1.5">
-            <button v-for="t in APARTMENT_TYPES" :key="t.value" class="chip" :class="filters.types.includes(t.value) ? 'chip-on' : ''" @click="toggleType(t.value)">
-              {{ t.label }}
-            </button>
-          </div>
-        </div>
-        <div class="space-y-4">
-          <div>
-            <label class="label">Статус</label>
-            <div class="flex flex-wrap gap-1.5">
-              <button class="chip" :class="filters.status == null ? 'chip-on' : ''" @click="filters.status = null">Любой</button>
-              <button v-for="s in STATUSES" :key="s.value" class="chip" :class="filters.status === s.value ? 'chip-on' : ''" @click="toggleStatus(s.value)">{{ s.label }}</button>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label class="label">Санузел</label>
-              <div class="flex flex-wrap gap-1.5">
-                <button class="chip" :class="filters.bathroomType == null ? 'chip-on' : ''" @click="filters.bathroomType = null">Любой</button>
-                <button v-for="b in BATHROOMS" :key="b.value" class="chip" :class="filters.bathroomType === b.value ? 'chip-on' : ''" @click="filters.bathroomType = b.value">{{ b.label }}</button>
-              </div>
-            </div>
-            <div>
-              <label class="label">Балкон</label>
-              <div class="flex flex-wrap gap-1.5">
-                <button class="chip" :class="filters.hasBalcony == null ? 'chip-on' : ''" @click="filters.hasBalcony = null">Любой</button>
-                <button class="chip" :class="filters.hasBalcony === true ? 'chip-on' : ''" @click="filters.hasBalcony = true">Есть</button>
-                <button class="chip" :class="filters.hasBalcony === false ? 'chip-on' : ''" @click="filters.hasBalcony = false">Нет</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Row 3: диапазоны -->
-      <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <RangeField label="Этаж" :from="filters.floorFrom" :to="filters.floorTo" from-ph="от" to-ph="до" @from="filters.floorFrom = $event" @to="filters.floorTo = $event" />
-        <RangeField label="Площадь, м²" :from="filters.areaFrom" :to="filters.areaTo" from-ph="от" to-ph="до" @from="filters.areaFrom = $event" @to="filters.areaTo = $event" />
-        <RangeField label="Цена, ₽" :from="filters.priceFrom" :to="filters.priceTo" from-ph="от" to-ph="до" @from="filters.priceFrom = $event" @to="filters.priceTo = $event" />
-      </div>
-
-      <div class="mt-5 flex justify-end border-t border-slate-100 pt-4">
-        <button class="btn btn-primary" :disabled="loading" @click="apply">
-          <span v-if="loading" class="loading-dot" />
-          <AppIcon v-else name="search" :size="15" />
-          Показать квартиры
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-slate-200/80 text-slate-400 transition-transform duration-300" :class="filterOpen ? 'rotate-180' : ''">
+            <AppIcon name="chevronDown" :size="16" />
+          </span>
         </button>
-      </div>
-    </section>
+
+        <Transition name="panel">
+          <div v-if="filterOpen" class="border-t border-slate-100 px-5 pb-6 pt-5 sm:px-6">
+            <!-- Row 1: корпус / секция -->
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label class="label">Корпус</label>
+                <select v-model="filters.buildingId" class="field" :disabled="!buildings.length" @change="filters.entranceId = null">
+                  <option :value="null">Все корпуса</option>
+                  <option v-for="b in buildings" :key="b.id" :value="b.id">{{ b.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="label">Секция</label>
+                <select v-model="filters.entranceId" class="field" :disabled="!availableEntrances.length">
+                  <option :value="null">Все секции</option>
+                  <option v-for="e in availableEntrances" :key="e.id" :value="e.id">{{ e.name }}<template v-if="e.maxFloors"> · до {{ e.maxFloors }} эт.</template></option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Row 2: чипы-фильтры -->
+            <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div>
+                <label class="label">Тип квартиры</label>
+                <div class="flex flex-wrap gap-1.5">
+                  <button v-for="t in APARTMENT_TYPES" :key="t.value" class="chip" :class="filters.types.includes(t.value) ? 'chip-on' : ''" @click="toggleType(t.value)">
+                    {{ t.label }}
+                  </button>
+                </div>
+              </div>
+              <div class="space-y-4">
+                <div>
+                  <label class="label">Статус</label>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button class="chip" :class="filters.status == null ? 'chip-on' : ''" @click="filters.status = null">Любой</button>
+                    <button v-for="s in STATUSES" :key="s.value" class="chip" :class="filters.status === s.value ? 'chip-on' : ''" @click="toggleStatus(s.value)">{{ s.label }}</button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="label">Санузел</label>
+                    <div class="flex flex-wrap gap-1.5">
+                      <button class="chip" :class="filters.bathroomType == null ? 'chip-on' : ''" @click="filters.bathroomType = null">Любой</button>
+                      <button v-for="b in BATHROOMS" :key="b.value" class="chip" :class="filters.bathroomType === b.value ? 'chip-on' : ''" @click="filters.bathroomType = b.value">{{ b.label }}</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="label">Балкон</label>
+                    <div class="flex flex-wrap gap-1.5">
+                      <button class="chip" :class="filters.hasBalcony == null ? 'chip-on' : ''" @click="filters.hasBalcony = null">Любой</button>
+                      <button class="chip" :class="filters.hasBalcony === true ? 'chip-on' : ''" @click="filters.hasBalcony = true">Есть</button>
+                      <button class="chip" :class="filters.hasBalcony === false ? 'chip-on' : ''" @click="filters.hasBalcony = false">Нет</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Row 3: диапазоны -->
+            <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <RangeField label="Этаж" :from="filters.floorFrom" :to="filters.floorTo" from-ph="от" to-ph="до" @from="filters.floorFrom = $event" @to="filters.floorTo = $event" />
+              <RangeField label="Площадь, м²" :from="filters.areaFrom" :to="filters.areaTo" from-ph="от" to-ph="до" @from="filters.areaFrom = $event" @to="filters.areaTo = $event" />
+              <RangeField label="Цена, ₽" :from="filters.priceFrom" :to="filters.priceTo" from-ph="от" to-ph="до" @from="filters.priceFrom = $event" @to="filters.priceTo = $event" />
+            </div>
+
+            <div class="mt-5 flex justify-end border-t border-slate-100 pt-4">
+              <button class="btn btn-primary" :disabled="loading" @click="apply">
+                <span v-if="loading" class="loading-dot" />
+                <AppIcon v-else name="search" :size="15" />
+                Показать квартиры
+              </button>
+            </div>
+          </div>
+        </Transition>
+      </section>
 
     <!-- Count line -->
     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -116,7 +135,22 @@
     <!-- Table -->
     <div v-else class="overflow-hidden rounded-3xl bg-white/90 shadow-lg shadow-slate-900/5 ring-1 ring-slate-200/60 backdrop-blur">
       <div class="overflow-x-auto">
-        <table class="w-full min-w-[1150px] text-left text-sm">
+        <table class="w-full min-w-[1150px] table-fixed text-left text-sm">
+<colgroup>
+              <col class="w-[68px]" />
+              <col class="w-[180px]" />
+              <col class="w-[100px]" />
+              <col class="w-[70px]" />
+                <col class="w-[80px]" />
+                <col class="w-[90px]" />
+                <col class="w-[80px]" />
+                <col class="w-[90px]" />
+                <col class="w-[80px]" />
+              <col class="w-[130px]" />
+              <col class="w-[70px]" />
+              <col class="w-[110px]" />
+              <col class="w-[52px]" />
+            </colgroup>
           <thead>
             <tr class="border-b border-slate-100 bg-slate-50/70">
               <SortHeader label="№" field="number" :sort-field="sortField" :sort-dir="sortDir" @sort="setSort" />
@@ -156,7 +190,7 @@
                 <td class="px-3 py-3 text-center tabular-nums">{{ fmtArea(a.area) }}</td>
                 <td class="px-3 py-3 text-center">
                   <span v-if="a.kitchenArea" class="tabular-nums text-slate-600">{{ fmtArea(a.kitchenArea) }}</span>
-                  <span v-else class="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-600" title="У студии кухня объединена с комнатой">в комнате</span>
+                  <span v-else class="text-[10px] font-semibold leading-tight text-violet-600" title="У студии кухня объединена с комнатой">в комн.</span>
                 </td>
                 <td class="px-3 py-3 text-center tabular-nums text-slate-600">{{ fmtArea(a.roomsArea) }}</td>
                 <td class="px-3 py-3 text-center tabular-nums text-slate-600">{{ fmtArea(a.bathroomArea) }}</td>
@@ -214,7 +248,7 @@ import RangeField from '@/components/RangeField.vue'
 import PaginationBar from '@/components/PaginationBar.vue'
 import SortHeader from '@/components/SortHeader.vue'
 import ApartmentCard from '@/components/ApartmentCard.vue'
-import { apartmentApi, manageApi } from '@/api'
+import { apartmentApi } from '@/api'
 import { APARTMENT_TYPES, STATUSES, apartmentTypeLabel, statusLabel, formatQuarter } from '@/utils/format.js'
 
 const props = defineProps({
@@ -253,6 +287,7 @@ const loading = ref(false)
 const error = ref('')
 const expandedId = ref(null)
 const expandOpen = ref(false)
+const filterOpen = ref(true)
 
 const availableEntrances = computed(() => {
   const b = props.buildings.find((x) => x.id === filters.buildingId)
@@ -327,26 +362,10 @@ watch(expandedId, async (v) => {
   requestAnimationFrame(() => (expandOpen.value = true))
 })
 
-/* Сроки сдачи/ключей по секциям */
-const buildingMeta = ref({})
-const loadBuildingMeta = async () => {
-  try {
-    const res = await manageApi.getComplexEdit(props.complexId)
-    const map = {}
-    ;(res.data?.buildings || []).forEach((b) => {
-      ;(b.entrances || []).forEach((e) => {
-        map[e.id] = { completion: b.completionDate, handover: b.keyHandoverDate }
-      })
-    })
-    buildingMeta.value = map
-  } catch {
-    buildingMeta.value = {}
-  }
-}
+/* Сроки сдачи/ключей приходят прямо в ApartmentDTO (completionDate / keyHandoverDate) —
+   дополнительный запрос за edit-DTO больше не нужен */
 const quartersOf = (a) => {
-  const meta = buildingMeta.value[a?.entrance?.id]
-  if (!meta) return null
-  const parts = [formatQuarter(meta.completion), formatQuarter(meta.handover)].filter(Boolean)
+  const parts = [formatQuarter(a?.completionDate), formatQuarter(a?.keyHandoverDate)].filter(Boolean)
   return parts.length ? parts.join(' / ') : null
 }
 
@@ -385,6 +404,7 @@ const load = async () => {
 
 const apply = () => {
   expandedId.value = null
+filterOpen.value = false
   page.value = 0
   load()
 }
@@ -418,10 +438,7 @@ watch(pageSize, () => {
 })
 
 /* Открытие страницы ЖК — сразу показываем все квартиры комплекса (фильтры пустые) */
-onMounted(() => {
-  loadBuildingMeta()
-  load()
-})
+onMounted(load)
 
 const formatMoney = (v) => new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(Number(v) || 0) + ' ₽'
 const fmtArea = (v) => (v ? Number(v).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' м²' : '—')
@@ -504,6 +521,16 @@ const rowClass = (s) => {
     transform: rotate(360deg);
   }
 }
+/* Сворачивание фильтров */
+  .panel-enter-active,
+  .panel-leave-active {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .panel-enter-from,
+  .panel-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 
 /* Плавное раскрытие карточки квартиры */
 .expander {

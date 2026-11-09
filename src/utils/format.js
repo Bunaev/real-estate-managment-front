@@ -1,10 +1,4 @@
-export function formatPrice(price) {
-    return new Intl.NumberFormat('ru-RU', { style: 'decimal', maximumFractionDigits: 0 }).format(price) + ' ₽'
-}
-
-export function formatArea(area) {
-    return new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(area) + ' м²'
-}
+/* Утилиты форматирования. Здесь только то, что реально импортируется компонентами. */
 
 const TYPE_LABELS = {
     STUDIO: 'Студия',
@@ -26,17 +20,11 @@ export const STATUSES = Object.entries(STATUS_LABELS).map(([v, l]) => ({ value: 
 const BATHROOM_LABELS = { COMBINED: 'Совмещённый', SEPARATE: 'Раздельный' }
 export function bathroomLabel(type) { return BATHROOM_LABELS[type] || type }
 
-export function metersToWalkMinutes(meters) {
-    if (!meters) return ''
-    const min = Math.round(meters / 83)
-    if (min < 1) return 'рядом'
-    return min + ' мин'
-}
-
+/** «пешком N мин» от расстояния в метрах (скорость 5 км/ч ≈ 83 м/мин). */
 export function walkTimeText(meters) {
-    const min = Number(metersToWalkMinutes(meters).replace(' мин', '')) || 0
     if (!meters) return ''
-    if (min <= 0) return 'пешком 1 мин'
+    const min = Math.round(Number(meters) / 83)
+    if (min < 1) return 'пешком 1 мин'
     return `пешком ${min} мин`
 }
 
@@ -60,13 +48,6 @@ export function formatMeters(meters) {
     return n >= 1000 ? (n / 1000).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' км' : n + ' м'
 }
 
-export function formatCoord(value, digits = 5) {
-    if (value === null || value === undefined || value === '') return '—'
-    const n = Number(value)
-    if (Number.isNaN(n)) return '—'
-    return n.toFixed(digits)
-}
-
 export function formatDate(iso) {
     if (!iso) return null
     const src = String(iso).length <= 10 ? String(iso) + 'T00:00:00' : String(iso)
@@ -84,17 +65,14 @@ export function formatQuarter(iso) {
     return `${Math.floor(d.getMonth() / 3) + 1} кв. ${d.getFullYear()}`
 }
 
-/* Названия связанных сущностей: в list-DTO (EditDTO) поля с суффиксом Name,
-   в detail-DTO — короткие. Помощники дают совместимость с обоими. */
+/* Названия связанных сущностей: карточка каталога отдаёт `*Name`,
+   детальная страница — короткие `developer/location/district`.
+   Помощники покрывают оба варианта, пока имена не унифицированы на бэке. */
 export const complexDeveloper = (c) => c?.developerName ?? c?.developer ?? ''
 export const complexLocation = (c) => c?.locationName ?? c?.location ?? ''
 export const complexDistrict = (c) => c?.districtName ?? c?.district ?? ''
 export const complexAddressLine = (c) =>
     [complexLocation(c), complexDistrict(c), c?.address].filter(Boolean).join(', ')
-
-export function hasCoords(item) {
-    return item && typeof item.latitude === 'number' && typeof item.longitude === 'number'
-}
 
 export function complexGradient(id) {
     const h1 = ((id * 47) % 360)
@@ -114,8 +92,4 @@ export function pluralize(n, forms) {
     if (n10 === 1 && n100 !== 11) return forms[0]
     if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return forms[1]
     return forms[2]
-}
-
-export function formatMoney(value) {
-    return new Intl.NumberFormat('ru-RU', { style: 'decimal', maximumFractionDigits: 0 }).format(Number(value) || 0) + ' ₽'
 }

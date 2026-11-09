@@ -10,32 +10,42 @@
       <div class="dot-grid-light absolute inset-0 opacity-40" />
 
       <div class="relative z-10 px-6 py-12 sm:px-10 lg:px-14 lg:py-16">
-        <span class="fade-up inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-indigo-200 backdrop-blur">
-          <AppIcon name="sparkles" :size="14" />
-          Каталог новостроек
-        </span>
+        <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
+          <!-- Left column: heading, search, stats -->
+          <div class="lg:col-span-7">
+          <span class="fade-up inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-indigo-200 backdrop-blur">
+            <AppIcon name="sparkles" :size="14" />
+            Каталог новостроек
+          </span>
+  
+          <h1 class="fade-up mt-5 max-w-3xl text-4xl font-black leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl" style="animation-delay: 60ms">
+            Жилые комплексы
+            <span class="text-gradient">для вашей жизни</span>
+          </h1>
+  
+          <p class="fade-up mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg" style="animation-delay: 120ms">
+            Подбирайте квартиры в новостройках по локации, району, застройщику, метро и бюджету —
+            вся информация о жилых комплексах в одном месте.
+          </p>
+  
+          <!-- Search -->
+          <div class="fade-up mt-8 max-w-2xl" style="animation-delay: 180ms">
+            <SearchBar placeholder="Например: «Московская», «Setl Group» или название ЖК…" @apply-filter="onApplyFilter" />
+          </div>
+  
+          <!-- Live stats -->
+          <div class="fade-up mt-8 flex flex-wrap items-center gap-2.5" style="animation-delay: 240ms">
+            <span class="hero-chip"><b class="tabular-nums">{{ store.total }}</b> {{ pluralize(store.total, ['жилой комплекс', 'жилых комплекса', 'жилых комплексов']) }}</span>
+            <span v-if="locations.length" class="hero-chip"><b class="tabular-nums">{{ locations.length }}</b> {{ pluralize(locations.length, ['локация', 'локации', 'локаций']) }}</span>
+            <span v-if="developers.length" class="hero-chip"><b class="tabular-nums">{{ developers.length }}</b> {{ pluralize(developers.length, ['застройщик', 'застройщика', 'застройщиков']) }}</span>
+            <span v-if="metroStations.length" class="hero-chip"><b class="tabular-nums">{{ metroStations.length }}</b> {{ pluralize(metroStations.length, ['станция метро', 'станции метро', 'станций метро']) }}</span>
+          </div>
+          </div>
 
-        <h1 class="fade-up mt-5 max-w-3xl text-4xl font-black leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl" style="animation-delay: 60ms">
-          Жилые комплексы
-          <span class="text-gradient">для вашей жизни</span>
-        </h1>
-
-        <p class="fade-up mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg" style="animation-delay: 120ms">
-          Подбирайте квартиры в новостройках по локации, району, застройщику, метро и бюджету —
-          вся информация о жилых комплексах в одном месте.
-        </p>
-
-        <!-- Search -->
-        <div class="fade-up mt-8 max-w-2xl" style="animation-delay: 180ms">
-          <SearchBar placeholder="Например: «Московская», «Setl Group» или название ЖК…" @apply-filter="onApplyFilter" />
-        </div>
-
-        <!-- Live stats -->
-        <div class="fade-up mt-8 flex flex-wrap items-center gap-2.5" style="animation-delay: 240ms">
-          <span class="hero-chip"><b class="tabular-nums">{{ store.total }}</b> {{ pluralize(store.total, ['жилой комплекс', 'жилых комплекса', 'жилых комплексов']) }}</span>
-          <span v-if="locations.length" class="hero-chip"><b class="tabular-nums">{{ locations.length }}</b> {{ pluralize(locations.length, ['локация', 'локации', 'локаций']) }}</span>
-          <span v-if="developers.length" class="hero-chip"><b class="tabular-nums">{{ developers.length }}</b> {{ pluralize(developers.length, ['застройщик', 'застройщика', 'застройщиков']) }}</span>
-          <span v-if="metroStations.length" class="hero-chip"><b class="tabular-nums">{{ metroStations.length }}</b> {{ pluralize(metroStations.length, ['станция метро', 'станции метро', 'станций метро']) }}</span>
+          <!-- Right column: events slider -->
+          <div class="fade-up lg:col-span-5" style="animation-delay: 160ms">
+            <HomeEventsSlider :events="publishedEvents" />
+          </div>
         </div>
       </div>
     </section>
@@ -182,8 +192,9 @@
 import { ref, computed, onMounted, watch, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useComplexStore } from '@/stores/complexStore'
-import { referenceApi } from '@/api'
+import { referenceApi, publisherApi } from '@/api'
 import SearchBar from '@/components/SearchBar.vue'
+import HomeEventsSlider from '@/components/HomeEventsSlider.vue'
 import FilterPanel from '@/components/FilterPanel.vue'
 import ComplexCard from '@/components/ComplexCard.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
@@ -217,6 +228,7 @@ const filters = ref({
 })
 
 const loadingReferences = ref(false)
+const publishedEvents = ref([])
 const locations = ref([])
 const districts = ref([])
 const developers = ref([])
@@ -273,9 +285,19 @@ const loadDistricts = async (locationId) => {
     districts.value = []
   }
 }
+const loadPublishedEvents = async () => {
+  try {
+    const res = await publisherApi.getEvents()
+    publishedEvents.value = res.data || []
+  } catch (e) {
+    console.error('Ошибка загрузки событий:', e)
+    publishedEvents.value = []
+  }
+}
 
 onMounted(() => {
   loadReferences()
+  loadPublishedEvents()
   store.fetchComplexes({}, 0, pageSize.value)
 })
 

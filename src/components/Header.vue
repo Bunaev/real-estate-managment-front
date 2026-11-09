@@ -29,6 +29,46 @@
 
       <!-- Right -->
       <div class="flex items-center gap-2.5">
+  <!-- Уведомление о незагруженных планировках рядом с админкой -->
+          <div
+            v-if="missingSummary"
+            class="relative"
+            @mouseenter="planPopover = true"
+            @mouseleave="planPopover = false"
+          >
+              <button
+                class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950/40 text-amber-300 backdrop-blur transition hover:bg-slate-950/60 hover:text-amber-200"
+                aria-label="Есть квартиры без планировок"
+              >
+                <AppIcon name="alert" :size="16" />
+                <span class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-400 px-1 text-[9px] font-black text-slate-900">
+                  {{ missingSummary?.countApartments || 0 }}
+                </span>
+              </button>
+
+              <Transition name="popover">
+                <div v-if="planPopover" class="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-3.5 text-left shadow-xl shadow-slate-950/30 backdrop-blur-xl">
+                  <p class="text-[11px] leading-relaxed text-slate-300">
+                    В ЖК <b class="text-white">{{ missingSummary?.complexName || '…' }}</b>,
+                    корпусе <b class="text-white">{{ missingSummary?.buildingName || '…' }}</b>,
+                    секции <b class="text-white">{{ missingSummary?.entranceName || '…' }}</b>
+                    есть <b class="text-amber-300">{{ missingSummary?.countApartments || 0 }}</b>
+                    незагруженных планировок.
+<template v-if="ui.missingPlansSummary.length > 1">
+                      <br />и ещё в {{ ui.missingPlansSummary.length - 1 }} секциях.
+                    </template>
+                  </p>
+                  <RouterLink
+                    :to="planLink"
+                    class="mt-2.5 inline-flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-[11px] font-bold text-indigo-200 transition hover:bg-white/15 hover:text-white"
+                    @click="planPopover = false"
+                  >
+                    Перейти
+                    <AppIcon name="arrow-right" :size="12" />
+                  </RouterLink>
+                </div>
+              </Transition>
+          </div>
         <!-- Вход в панель управления: сразу переход, сдержанный стеклянный акцент -->
         <RouterLink
           to="/admin"
@@ -99,15 +139,52 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
+import { useUiStore } from '@/stores/uiStore'
 
 const route = useRoute()
 const router = useRouter()
+const ui = useUiStore()
 const mobileOpen = ref(false)
 const time = ref('')
 const dateText = ref('')
 
 const catalogActive = computed(() => route.path.startsWith('/complex'))
 const isAdmin = computed(() => route.path.startsWith('/admin'))
+const planPopover = ref(false)
+  const missingSummary = computed(() => {
+    const fromSummary = ui.missingPlansSummary.find((s) => Number(s.countApartments) > 0)
+    if (fromSummary) return fromSummary
+
+    // Пока summary с бэка не пришёл или при временной ошибке — не теряем
+    // уже известный контекст догрузки планировок (например, после импорта).
+    const pending = ui.pendingPlanUpload
+    if (pending?.apartments?.length) {
+      return {
+        complexId: pending.complexId,
+        complexName: pending.complexName,
+        buildingId: pending.buildingId,
+        buildingName: pending.buildingName,
+        entranceId: pending.entranceId,
+        entranceName: pending.entranceName,
+        countApartments: pending.apartments.length,
+      }
+    }
+
+    return null
+  })
+  const planLink = computed(() => {
+    const ctx = missingSummary.value || ui.pendingPlanUpload
+    if (!ctx) return '/admin'
+    return {
+      path: '/admin',
+      query: {
+        tab: 'apartments',
+        complexId: ctx.complexId || undefined,
+        buildingId: ctx.buildingId || undefined,
+        entranceId: ctx.entranceId || undefined,
+      },
+    }
+  })
 
 const goCatalog = () => {
   if (route.path === '/' || catalogActive.value) scrollToCatalog()
@@ -145,4 +222,13 @@ onUnmounted(() => clearInterval(timer))
   opacity: 0;
   transform: translateY(-6px) scale(0.98);
 }
+.popover-enter-active,
+  .popover-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .popover-enter-from,
+  .popover-leave-to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
 </style>

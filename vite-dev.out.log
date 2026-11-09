@@ -1,0 +1,14 @@
+
+> rem-frontend@1.0.0 dev
+> vite
+
+
+  VITE v8.2.2  ready in 762 ms
+
+  ➜  Local:   http://127.0.0.1:3000/
+  ➜  press h + enter to show help
+19:19:34 [vite] (client) hmr update /src/style.css
+18:45:16 [vite] (client) hmr update /src/style.css
+18:51:11 [vite] (client) hmr update /src/style.css
+18:51:11 [vite] (client) hmr update /src/style.css
+19:01:18 [vite] (client) hmr update /src/style.css

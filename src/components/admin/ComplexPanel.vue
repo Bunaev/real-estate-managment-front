@@ -61,6 +61,9 @@
             <button class="btn-sm btn-sm-primary" @click="emit('openTab', 'buildings', { complexId: c.id })">
               <AppIcon name="floor" :size="14" /> Корпуса
             </button>
+<button class="btn-sm" title="Файлы и документы ЖК" @click="openFiles(c)">
+                <AppIcon name="folder" :size="14" /> Файлы
+              </button>
             <button class="btn-sm" title="Редактировать (мастер)" @click="openMaster(c.id)">
               <AppIcon name="edit" :size="14" />
             </button>
@@ -252,6 +255,14 @@
         </button>
       </template>
     </BaseModal>
+<!-- Files explorer / admin file manager -->
+      <ComplexFilesModal
+        :open="filesOpen"
+        :complex-id="filesComplexId"
+        :complex-name="filesComplexName"
+        mode="admin"
+        @close="filesOpen = false"
+      />
 
     <!-- Delete confirm -->
     <BaseModal :open="!!deleteTarget" title="Удалить жилой комплекс?" width="sm" @close="deleteTarget = null">
@@ -268,6 +279,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import ComplexFilesModal from '@/components/ComplexFilesModal.vue'
 // Мини-карта выбора точки грузится лениво вместе с maplibre-gl
 const MapPicker = defineAsyncComponent(() => import('@/components/MapPicker.vue'))
 import { manageApi, referenceApi, complexApi, publicFileUrl } from '@/api'
@@ -294,6 +306,9 @@ const error = ref('')
 const search = ref('')
 const busy = ref(false)
 const saving = ref(false)
+const filesOpen = ref(false)
+const filesComplexId = ref(null)
+const filesComplexName = ref('')
 
 const locations = ref([])
 const developers = ref([])
@@ -435,6 +450,11 @@ const loadDistricts = async (locationId) => {
 const onLocationChange = async () => {
   master.value.districtId = null
   await loadDistricts(master.value.locationId)
+}
+const openFiles = (c) => {
+  filesComplexId.value = c.id
+  filesComplexName.value = c.name
+  filesOpen.value = true
 }
 
 const openMaster = async (id = null) => {

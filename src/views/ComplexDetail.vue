@@ -59,6 +59,23 @@
             <span class="inline-flex items-center gap-1.5"><AppIcon name="location" :size="15" /> {{ addressLine }}</span>
             <span v-if="complexDeveloper(hero)" class="inline-flex items-center gap-1.5"><AppIcon name="developer" :size="15" /> {{ complexDeveloper(hero) }}</span>
           </p>
+<div class="mt-6 flex flex-wrap gap-2.5">
+            <button
+              class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/15 px-4 py-2.5 text-sm font-bold text-white shadow-lg backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/25"
+              :class="presentationUrl ? '' : 'pointer-events-none opacity-40'"
+              title="Скачать презентацию ЖК"
+              @click="downloadPresentation"
+            >
+              <AppIcon name="download" :size="15" /> Скачать презентацию
+            </button>
+            <button
+              class="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/15 px-4 py-2.5 text-sm font-bold text-white shadow-lg backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/25"
+              title="Открыть файлы и документы ЖК"
+              @click="filesOpen = true"
+            >
+              <AppIcon name="folder" :size="15" /> Открыть файлы
+            </button>
+          </div>
 
           <div class="mt-7 grid max-w-2xl grid-cols-3 gap-3">
             <div v-for="s in visibleStats" :key="s.key" class="rounded-2xl bg-white/12 px-4 py-3.5 backdrop-blur-md ring-1 ring-white/20">
@@ -137,6 +154,7 @@
                       <span v-for="(ent, ei) in b.entrances || []" :key="ent.id" class="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2 text-sm font-semibold text-slate-600 shadow-sm ring-1 ring-slate-200/80">
                         <AppIcon name="door" :size="15" stroke="#818cf8" />
                         {{ ent.name || 'Секция ' + (ei + 1) }}
+                        <span v-if="ent.maxFloors" class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-500">до {{ ent.maxFloors }} эт.</span>
                       </span>
                       <p v-if="!(b.entrances || []).length" class="text-sm text-slate-400">Секции не добавлены</p>
                     </div>
@@ -183,6 +201,13 @@
         </aside>
       </div>
     </template>
+<ComplexFilesModal
+      :open="filesOpen"
+      :complex-id="id"
+      :complex-name="hero?.name || ''"
+      mode="client"
+      @close="filesOpen = false"
+    />
   </div>
 </template>
 
@@ -193,6 +218,7 @@ import { complexApi, publicFileUrl } from '@/api'
 import AppIcon from '@/components/AppIcon.vue'
 import ApartmentsExplorer from '@/components/ApartmentsExplorer.vue'
 import MetroTimes from '@/components/MetroTimes.vue'
+import ComplexFilesModal from '@/components/ComplexFilesModal.vue'
 import {
   complexGradient,
   firstLetter,
@@ -215,6 +241,8 @@ const summary = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const renderOk = ref(false)
+const filesOpen = ref(false)
+const presentationUrl = ref('')
 
 const renderSrc = computed(() => publicFileUrl(hero.value?.keyRenderPath))
 
@@ -276,6 +304,17 @@ const toggle = (i) => {
 
 const cardGradient = (i) => complexGradient(Number(id.value) * 7 + i + 1)
 const formatNum = (n) => (n == null ? '—' : Number(n).toLocaleString('ru-RU'))
+const loadPresentation = async () => {
+  try {
+    const res = await complexApi.getPresentation(id.value)
+    presentationUrl.value = res.data || ''
+  } catch {
+    presentationUrl.value = ''
+  }
+}
+const downloadPresentation = () => {
+  if (presentationUrl.value) window.open(presentationUrl.value, '_blank', 'noopener')
+}
 
 const load = async () => {
   loading.value = true
@@ -284,6 +323,7 @@ const load = async () => {
     const res = await complexApi.getComplex(id.value)
     complex.value = res.data
     if (res.data?.name) document.title = `${res.data.name} · REM`
+await loadPresentation()
   } catch (err) {
     error.value = err.message
     console.error('Ошибка загрузки ЖК:', err)

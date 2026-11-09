@@ -26,9 +26,9 @@
           <ul class="mt-2 space-y-1.5">
             <li>• Только <b>.xlsx</b>. Имя листа — <b>Apartment</b> (принимаются также «квартиры», «апартаменты», «apartments», «apart»).</li>
             <li>• <b>Первая строка</b> — заголовки колонок. Регистр и порядок колонок не важны: сопоставление идёт по названию (или синониму).</li>
-            <li>• Должны присутствовать <b>все 9 колонок</b> из таблицы ниже. Лишние колонки игнорируются.</li>
-            <li>• Данные — со второй строки. Разбор останавливается на первой строке, где <b>пустая первая ячейка</b>.</li>
-            <li>• Формулы и пустые ячейки не поддерживаются — сервер вернёт ошибку «Ячейка пуста».</li>
+            <li>• Должны присутствовать <b>все 11 обязательных колонок</b> из таблицы ниже (2 колонки — необязательные). Лишние колонки игнорируются.</li>
+            <li>• Данные — со второй строки. Пустые строки пропускаются, разбор идёт до конца данных на листе.</li>
+            <li>• Пустые ячейки превращаются в <b>null</b> (для необязательных колонок это нормально). Формулы Excel не читаются.</li>
             <li>• Квартиры привязываются к <b>секции, выбранной в интерфейсе</b>: колонок «корпус»/«секция» в файле нет.</li>
           </ul>
         </section>
@@ -38,7 +38,7 @@
           <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Колонки файла</h4>
           <div class="mt-2 overflow-hidden rounded-2xl ring-1 ring-slate-200">
             <div class="overflow-x-auto">
-              <table class="w-full min-w-[42rem] text-left text-xs">
+              <table class="w-full min-w-[56rem] text-left text-xs">
                 <thead class="bg-slate-50 text-[11px] font-bold uppercase tracking-wide text-slate-400">
                   <tr>
                     <th class="px-3 py-2.5">Заголовок</th>
@@ -99,9 +99,9 @@
         <section>
           <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400">Пример листа «Apartment»</h4>
           <div class="mt-2 overflow-x-auto rounded-2xl bg-slate-950 p-4 font-mono text-[11px] leading-relaxed text-slate-200">
-            <div>№&nbsp;&nbsp;&nbsp;| Тип&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Цена&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| Цена за м²&nbsp;| Этаж | Площадь | Балкон | Статус&nbsp;&nbsp;&nbsp;&nbsp;| Тип санузла</div>
-            <div class="text-slate-400">12&nbsp;&nbsp;| STUDIO&nbsp;&nbsp;| 8400000&nbsp;&nbsp;| 200957&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 7&nbsp;&nbsp;&nbsp;&nbsp;| 41.8&nbsp;&nbsp;&nbsp;&nbsp;| TRUE&nbsp;&nbsp;&nbsp;| AVAILABLE&nbsp;| COMBINED</div>
-            <div class="text-slate-400">13&nbsp;&nbsp;| ONE_ROOM| 7200000&nbsp;&nbsp;| 210526&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 5&nbsp;&nbsp;&nbsp;&nbsp;| 34.2&nbsp;&nbsp;&nbsp;&nbsp;| FALSE&nbsp;&nbsp;| RESERVED&nbsp;&nbsp;| SEPARATE</div>
+            <div>№&nbsp;&nbsp;| Тип&nbsp;&nbsp;&nbsp;&nbsp;| Цена&nbsp;&nbsp;&nbsp;&nbsp;| Цена за м²&nbsp;| Этаж | Площадь | Кухня | Коридор | Санузел | Комнаты | Балкон | Статус&nbsp;&nbsp;&nbsp;&nbsp;| Тип санузла</div>
+            <div class="text-slate-400">12&nbsp;&nbsp;| STUDIO&nbsp;| 8400000&nbsp;&nbsp;| 200957&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 7&nbsp;&nbsp;&nbsp;&nbsp;| 41.8&nbsp;&nbsp;&nbsp;&nbsp;| 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| TRUE&nbsp;&nbsp;&nbsp;| AVAILABLE&nbsp;| COMBINED</div>
+            <div class="text-slate-400">13&nbsp;&nbsp;| ONE_ROOM| 7200000&nbsp;&nbsp;| 210526&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 5&nbsp;&nbsp;&nbsp;&nbsp;| 34.2&nbsp;&nbsp;&nbsp;&nbsp;| 9.1&nbsp;&nbsp;&nbsp;&nbsp;| 4.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 3.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 15.4&nbsp;&nbsp;&nbsp;| FALSE&nbsp;&nbsp;| RESERVED&nbsp;&nbsp;| SEPARATE</div>
           </div>
           <p class="mt-2 text-slate-500">Файл выгрузки можно править и загружать обратно — формат тот же.</p>
         </section>
@@ -123,9 +123,13 @@ const columns = [
   { title: '№', synonyms: 'номер, #, №, ном, number, num', values: 'Целое число, ≥ 1', example: '12' },
   { title: 'Тип', synonyms: 'type, тип, тип квартиры, комнаты, количество комнат', values: 'Код типа или название как в выгрузке', example: 'STUDIO' },
   { title: 'Цена', synonyms: 'цена, price, стоимость', values: 'Число, без пробелов и ₽', example: '8400000' },
-  { title: 'Цена за м²', synonyms: 'цена за м², цена квм, price per m², PPSM', values: 'Число (если не заполнить — останется пустым)', example: '200957' },
+  { title: 'Цена за м²', synonyms: 'цена за м², цена квм, price per m², PPSM', values: 'Необязательная · число; без пробелов и ₽', example: '200957' },
   { title: 'Этаж', synonyms: 'этаж, floor', values: 'Целое число', example: '7' },
-  { title: 'Площадь', synonyms: 'area, площадь, s', values: 'Число; запятая или точка', example: '41.8' },
+  { title: 'Площадь', synonyms: 'area, площадь, s', values: 'Необязательная · число; запятая или точка', example: '41.8' },
+{ title: 'Площадь кухни', synonyms: 'площадь кухни, кухня, kitchen area, kitchen', values: 'Число; пустая ячейка = null', example: '0' },
+    { title: 'Площадь коридора', synonyms: 'площадь коридора, коридор, hallway area, hallway', values: 'Число; пустая ячейка = null', example: '0' },
+    { title: 'Площадь санузла', synonyms: 'площадь санузла, санузел, bathroom area, bathroom', values: 'Число; пустая ячейка = null', example: '0' },
+    { title: 'Площадь комнат', synonyms: 'площадь комнат, комнаты, rooms area, rooms', values: 'Число; пустая ячейка = null', example: '0' },
   { title: 'Балкон', synonyms: 'наличие балкона, балкон, hasBalcony', values: 'TRUE / FALSE', example: 'TRUE' },
   { title: 'Статус', synonyms: 'status, статус', values: 'AVAILABLE / RESERVED / SOLD', example: 'AVAILABLE' },
   { title: 'Тип санузла', synonyms: 'тип санузла, санузел, bathroom, bathroomType', values: 'COMBINED / SEPARATE', example: 'COMBINED' },

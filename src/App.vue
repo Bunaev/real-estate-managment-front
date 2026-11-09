@@ -32,14 +32,26 @@
       </div>
     </footer>
 
+    <PlanInviteModal />
+    <PlanUploadModal />
     <ToastHost />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import Header from '@/components/Header.vue'
 import ToastHost from '@/components/ui/ToastHost.vue'
+import PlanInviteModal from '@/components/admin/PlanInviteModal.vue'
+import PlanUploadModal from '@/components/admin/PlanUploadModal.vue'
+import { useUiStore } from '@/stores/uiStore'
 
+const ui = useUiStore()
 const year = ref(new Date().getFullYear())
+
+onMounted(() => {
+  // Глобальное уведомление о незагруженных планировках должно проверяться
+  // при старте приложения (на любой странице).
+  ui.refreshMissingPlansSummary()
+})
 </script>

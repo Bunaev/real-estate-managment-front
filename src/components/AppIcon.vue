@@ -44,6 +44,7 @@ const icons = {
   grid: { viewBox: '0 0 24 24', paths: [{ d: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z' }] },
   rows: { viewBox: '0 0 24 24', paths: [{ d: 'M4 5h16M4 12h16M4 19h16' }, { d: 'M8 5v0M8 12v0M8 19v0' }] },
   plus: { viewBox: '0 0 24 24', paths: [{ type: 'line', x1: '12', y1: '5', x2: '12', y2: '19' }, { type: 'line', x1: '5', y1: '12', x2: '19', y2: '12' }] },
+minus: { viewBox: '0 0 24 24', paths: [{ type: 'line', x1: '5', y1: '12', x2: '19', y2: '12' }] },
   rotate: { viewBox: '0 0 24 24', paths: [{ d: 'M3 12a9 9 0 1 0 3-6.7' }, { d: 'M3 4v5h5' }] },
   alert: { viewBox: '0 0 24 24', paths: [{ d: 'M12 3 2 20h20L12 3Z' }, { d: 'M12 10v4M12 17.5v.5' }] },
   sparkles: { viewBox: '0 0 24 24', paths: [{ d: 'M12 3l1.5 5L18 9l-4.5 1.5L12 16l-1.5-5.5L6 9l5.5-1.5L12 3Z' }, { d: 'M18 17l-.6 2.4L15 20.5l2.4.6.6 2.5.6-2.5 2.4-.6-2.4-1.1-.6-2.4Z' }] },
@@ -60,10 +61,15 @@ const icons = {
   settings: { viewBox: '0 0 24 24', paths: [{ type: 'circle', cx: '12', cy: '12', r: '3' }, { d: 'M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 8.9 19a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 8.9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z' }] },
   map: { viewBox: '0 0 24 24', paths: [{ d: 'M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20V6.5Z' }, { d: 'M9 4v13.5M15 6.5V20' }] },
   image: { viewBox: '0 0 24 24', paths: [{ type: 'rect', x: '3', y: '4', width: '18', height: '16', rx: '2.5' }, { type: 'circle', cx: '8.5', cy: '9.5', r: '1.5' }, { d: 'M21 15.5 16.5 11l-6 6-3-3-4.5 4.5' }] },
+    info: { viewBox: '0 0 24 24', paths: [{ type: 'circle', cx: '12', cy: '12', r: '9' }, { d: 'M12 11v5' }, { d: 'M12 8h.01' }] },
   crosshair: { viewBox: '0 0 24 24', paths: [{ type: 'circle', cx: '12', cy: '12', r: '8' }, { d: 'M12 2v4M12 18v4M2 12h4M18 12h4' }, { type: 'circle', cx: '12', cy: '12', r: '1.6' }] },
   walk: { viewBox: '0 0 24 24', paths: [{ type: 'circle', cx: '12', cy: '4.5', r: '2' }, { d: 'M12 6.5V11' }, { d: 'M12 11l-3.6 3.4L10 18.5' }, { d: 'M12 11l4.2 2.8' }, { d: 'M12 14.2 11 17.6' }, { d: 'M8.4 13.2l3.4-2.2' }] },
   car: { viewBox: '0 0 24 24', paths: [{ d: 'M5.5 11.5 7.6 8a2 2 0 0 1 1.8-1h5.2a2 2 0 0 1 1.8 1l2.1 3.5' }, { d: 'M3.5 11.5h17v3.4a1.6 1.6 0 0 1-1.6 1.6h-1.2' }, { d: 'M3.5 16.5H5v-5' }, { type: 'circle', cx: '7.6', cy: '16.6', r: '1.6' }, { type: 'circle', cx: '16.4', cy: '16.6', r: '1.6' }] },
   bus: { viewBox: '0 0 24 24', paths: [{ d: 'M5 8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v8a1 1 0 0 1-1 1h-1.5' }, { d: 'M4 8h16M4 8v8a1 1 0 0 0 1 1h1' }, { d: 'M5 13h14' }, { d: 'M8.2 17.8a1.5 1.5 0 1 1-3 0M18.8 17.8a1.5 1.5 0 1 1-3 0' }, { d: 'M9 6h6' }] },
+folder: { viewBox: '0 0 24 24', paths: [{ d: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z' }] },
+    file: { viewBox: '0 0 24 24', paths: [{ d: 'M6 3h8l4 4v14H6V3Z' }, { d: 'M14 3v4h4' }] },
+    play: { viewBox: '0 0 24 24', paths: [{ d: 'M8 5.5v13l11-6.5-11-6.5Z', fill: 'currentColor', stroke: 'none' }] },
+    video: { viewBox: '0 0 24 24', paths: [{ type: 'rect', x: '3', y: '5', width: '14', height: '14', rx: '3' }, { d: 'M17 10.5 21 8v8l-4-2.5' }] },
 }
 
 const iconData = computed(() => icons[props.name] || icons.home)

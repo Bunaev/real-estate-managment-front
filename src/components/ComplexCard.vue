@@ -89,21 +89,21 @@
         </span>
       </div>
 
-      <!-- Footer -->
-      <div class="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-3.5">
-        <div class="flex items-center gap-3.5 text-xs font-semibold text-slate-500">
-          <span class="inline-flex items-center gap-1.5"><AppIcon name="building" :size="14" stroke="#818cf8" />{{ countBuildings }}</span>
-          <span class="inline-flex items-center gap-1.5"><AppIcon name="door" :size="14" stroke="#818cf8" />{{ countEntrance }}</span>
-          <span class="hidden min-[420px]:inline-flex items-center gap-1.5"><AppIcon name="apartment" :size="14" stroke="#818cf8" />{{ countApartment }}</span>
-        </div>
-        <span class="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 transition-all duration-300 group-hover:gap-2.5">
-          Подробнее
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md shadow-indigo-600/30 transition-transform duration-300 group-hover:rotate-45">
-            <AppIcon name="arrow-up-right" :size="15" :stroke-width="2.5" />
+        <!-- Footer -->
+        <div class="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-3.5">
+          <div class="flex items-center gap-3.5 text-xs font-semibold text-slate-500">
+            <span class="inline-flex items-center gap-1.5"><AppIcon name="building" :size="14" stroke="#818cf8" />{{ countBuildings }}</span>
+            <span class="inline-flex items-center gap-1.5"><AppIcon name="door" :size="14" stroke="#818cf8" />{{ countEntrance }}</span>
+            <span class="hidden min-[420px]:inline-flex items-center gap-1.5"><AppIcon name="apartment" :size="14" stroke="#818cf8" />{{ countApartment }}</span>
+          </div>
+          <span class="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 transition-all duration-300 group-hover:gap-2.5">
+            Подробнее
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md shadow-indigo-600/30 transition-transform duration-300 group-hover:rotate-45">
+              <AppIcon name="arrow-up-right" :size="15" :stroke-width="2.5" />
+            </span>
           </span>
-        </span>
-      </div>
-    </div>
+        </div>
+</div>
   </article>
 </template>
 
@@ -112,6 +112,7 @@ import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '@/components/AppIcon.vue'
 import MetroTimes from '@/components/MetroTimes.vue'
+
 import { publicFileUrl } from '@/api'
 import { complexGradient, firstLetter, formatMeters, complexDeveloper, complexAddressLine } from '@/utils/format.js'
 import { stationDotStyle, stationLineTitle } from '@/utils/metroLines.js'

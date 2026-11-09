@@ -318,6 +318,7 @@ const onFilePicked = async (ev) => {
   try {
     const res = await manageApi.importApartments(importEntrance.id, file)
     ui.toast(res.data || 'Квартиры загружены')
+      await preparePlanUpload(importEntrance)
   } catch (err) {
     ui.toast(err.message, 'error')
   } finally {
@@ -326,6 +327,20 @@ const onFilePicked = async (ev) => {
     if (fileInput.value) fileInput.value.value = ''
   }
 }
+const preparePlanUpload = async (entrance) => {
+    try {
+      // Подтягиваем список квартир секции и оставляем те, у которых нет одной из планировок.
+      // После excel-импорта это будут в первую очередь только что созданные квартиры.
+      const res = await manageApi.getApartments({ residentialComplexId: complexId.value, entranceId: entrance.id }, 0, 1000)
+      const items = res.data?.content || res.data || []
+      const candidates = items.filter((a) => !a.planKey || !a.entrancePlanKey)
+      const building = buildings.value.find((b) => b.entrances?.some((en) => en.id === entrance.id))
+        if (candidates.length) ui.offerPlanUpload({ entranceId: entrance.id, entranceName: entrance.name, complexId: complexId.value, buildingId: building?.id || null, complexName: currentComplexName.value, buildingName: building?.name || '', apartments: candidates })
+    } catch {
+      const building = buildings.value.find((b) => b.entrances?.some((en) => en.id === entrance.id))
+        ui.offerPlanUpload({ entranceId: entrance.id, entranceName: entrance.name, complexId: complexId.value, buildingId: building?.id || null, complexName: currentComplexName.value, buildingName: building?.name || '', apartments: [] })
+    }
+  }
 
 const exportEntrance = (e) => {
   const a = document.createElement('a')
